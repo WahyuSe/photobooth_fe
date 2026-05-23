@@ -1,0 +1,26 @@
+.timer {
+  position: fixed;
+  top: 12px;
+  right: 80%;
+  background: rgba(10, 10, 20, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.warning {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #f87171;
+  animation: pulse 1s infinite;
+}
