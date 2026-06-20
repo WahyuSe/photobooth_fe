@@ -24,8 +24,16 @@ export default function SelectFramePage() {
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data.length > 0) {
-          setTemplates(data.data);
-          setSelectedTemplate(data.data[0]);
+          const layout = localStorage.getItem('pb_layout');
+          const filtered = layout ? data.data.filter((t: Template) => t.layout === layout) : data.data;
+          
+          if (filtered.length > 0) {
+            setTemplates(filtered);
+            setSelectedTemplate(filtered[0]);
+          } else {
+            setTemplates(data.data);
+            setSelectedTemplate(data.data[0]);
+          }
         }
       })
       .catch(err => console.error('Failed to load templates:', err));

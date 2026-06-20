@@ -22,31 +22,30 @@ export default function BoothClient() {
   const [isPrinting, setIsPrinting] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(false);
-  const [layout, setLayout] = useState<'strip' | 'grid2x2' | 'grid3x2' | 'single' | 'strip3' | 'grid'>('strip');
+  const [layout, setLayout] = useState<'grid2x3' | 'grid2x4' | 'strip' | 'grid2x2' | 'grid3x2' | 'single' | 'strip3' | 'grid'>('grid2x4');
   const [template, setTemplate] = useState<Template | null>(null);
   const { toasts, addToast, removeToast } = useToast();
+  const [photoCountdown, setPhotoCountdown] = useState(5);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [activeMobileSlot, setActiveMobileSlot] = useState<number | null>(null);
   
-  // Load template on mount
+  // Load layout on mount
   useEffect(() => {
-    const tplId = localStorage.getItem('pb_template_id');
-    if (tplId) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/templates`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            const found = data.data.find((t: Template) => t.id === tplId);
-            if (found) {
-              setTemplate(found);
-              setLayout(found.layout as any);
-            }
-          }
-        });
-    }
+    const l = localStorage.getItem('pb_layout') as any;
+    if (l) setLayout(l);
+
+    // Get event config for photoCountdown
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/event/config`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setPhotoCountdown(data.data.photoCountdown || 5);
+        }
+      })
+      .catch(err => console.error('Failed to load event config:', err));
   }, []);
 
-  const maxPhotos = template
-    ? template.photoCount
-    : (layout === 'grid3x2' ? 6 : (layout === 'strip3' ? 3 : (layout === 'single' ? 1 : 4)));
+  const maxPhotos = layout === 'grid2x3' ? 3 : (layout === 'grid2x4' ? 4 : 4);
   const isDone = photos.length >= maxPhotos;
 
   const capturePhoto = useCallback(() => {
@@ -61,7 +60,7 @@ export default function BoothClient() {
   const startCountdown = useCallback(() => {
     if (isCountingDown || isDone) return;
     setIsCountingDown(true);
-    let count = COUNTDOWN_SECONDS;
+    let count = photoCountdown;
     setCountdown(count);
 
     const interval = setInterval(() => {
@@ -178,11 +177,11 @@ export default function BoothClient() {
     }
   };
 
-  // Auto-capture mode
+  // Auto-capture mode (always on when started)
   const [autoCapture, setAutoCapture] = useState(false);
   useEffect(() => {
     if (autoCapture && !isCountingDown && !isDone && cameraReady) {
-      const timer = setTimeout(() => startCountdown(), 1500);
+      const timer = setTimeout(() => startCountdown(), 1000);
       return () => clearTimeout(timer);
     }
   }, [autoCapture, isCountingDown, isDone, cameraReady, startCountdown]);
@@ -191,15 +190,6 @@ export default function BoothClient() {
     <div className={styles.wrapper}>
       {/* Flash overlay */}
       {isFlashing && <div className={styles.flashOverlay} aria-hidden="true" />}
-
-      {/* Header */}
-      <header className={styles.header}>
-        <div style={{ width: 100 }} /> {/* Spacer */}
-        <h1 className={styles.headerTitle}>📸 PhotoBooth</h1>
-        <div className={styles.headerActions}>
-          <span className={styles.photoCount}>{photos.length}/{maxPhotos}</span>
-        </div>
-      </header>
 
       <div className={styles.main}>
         {/* Camera Section */}
@@ -212,26 +202,28 @@ export default function BoothClient() {
                 <small>Pastikan Anda mengizinkan akses kamera di browser</small>
               </div>
             ) : (
-              <>
-                <Webcam
-                  ref={webcamRef}
-                  audio={false}
-                  screenshotFormat="image/jpeg"
-                  screenshotQuality={0.92}
-                  mirrored
-                  className={styles.webcam}
-                  onUserMedia={() => setCameraReady(true)}
-                  onUserMediaError={() => setCameraError(true)}
-                  videoConstraints={{ width: 1280, height: 720, facingMode: 'user' }}
-                />
-                {/* Viewfinder overlay */}
-                <div className={styles.viewfinderOverlay}>
-                  <div className={styles.vfCorner} />
-                  <div className={styles.vfCorner} />
-                  <div className={styles.vfCorner} />
-                  <div className={styles.vfCorner} />
-                </div>
-              </>
+              !isDone && (
+                <>
+                  <Webcam
+                    ref={webcamRef}
+                    audio={false}
+                    screenshotFormat="image/jpeg"
+                    screenshotQuality={1}
+                    mirrored
+                    className={styles.webcam}
+                    onUserMedia={() => setCameraReady(true)}
+                    onUserMediaError={() => setCameraError(true)}
+                    videoConstraints={{ width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' }}
+                  />
+                  {/* Viewfinder overlay */}
+                  <div className={styles.viewfinderOverlay}>
+                    <div className={styles.vfCorner} />
+                    <div className={styles.vfCorner} />
+                    <div className={styles.vfCorner} />
+                    <div className={styles.vfCorner} />
+                  </div>
+                </>
+              )
             )}
 
             {/* Countdown */}
@@ -252,66 +244,120 @@ export default function BoothClient() {
 
           {/* Camera Controls */}
           <div className={styles.cameraControls}>
-            <div className={styles.captureRow}>
-              <button
-                id="btn-auto-capture"
-                className={`btn btn-sm ${autoCapture ? 'btn-danger' : 'btn-secondary'}`}
-                onClick={() => setAutoCapture(p => !p)}
-                disabled={isDone}
-              >
-                {autoCapture ? '⏹ Stop Auto' : '🔄 Auto Capture'}
-              </button>
-
-              <button
-                id="btn-capture"
-                className={`btn btn-primary ${styles.captureBtn}`}
-                onClick={startCountdown}
-                disabled={isCountingDown || isDone || !cameraReady}
-              >
-                {isCountingDown ? `⏱ ${countdown}` : '📸 Ambil Foto'}
-              </button>
-
-              <button
-                id="btn-reset"
-                className="btn btn-sm btn-secondary"
-                onClick={resetAll}
-                disabled={photos.length === 0}
-              >
-                🔄 Ulang Semua
-              </button>
+            <div className={styles.captureRow} style={{ justifyContent: 'center' }}>
+              {!autoCapture && !isDone && (
+                <button
+                  id="btn-auto-capture"
+                  className="btn btn-primary"
+                  style={{ padding: '16px 40px', fontSize: '20px', borderRadius: '40px' }}
+                  onClick={() => setAutoCapture(true)}
+                  disabled={!cameraReady}
+                >
+                  🚀 Mulai Foto Otomatis
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Right Panel — Photo Strip */}
         <div className={styles.rightPanel}>
-          <h2 className={styles.panelTitle}>Hasil Foto</h2>
+          <h2 className={styles.panelTitle}>Hasil Foto ({photos.length}/{maxPhotos})</h2>
 
-          <div className={(layout === 'strip' || layout === 'strip3') ? styles.photoStrip : styles.photoGrid} id="photo-result">
-            {/* Taken photos */}
-            {photos.map((src, i) => (
-              <div key={i} className={styles.photoSlot} style={{ animationDelay: `${i * 0.1}s` }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt={`Foto ${i + 1}`} className={styles.photo} />
-                <div className={styles.photoOverlay}>
-                  <button
-                    id={`btn-retake-${i}`}
-                    className={`btn btn-sm btn-danger`}
-                    onClick={() => retakePhoto(i)}
-                  >
-                    🔁 Retake
-                  </button>
+          {(() => {
+            if (layout === 'grid2x3' || layout === 'grid2x4') {
+              const rows = layout === 'grid2x3' ? 3 : 4;
+              const totalSlots = rows * 2;
+              const slotElements = [];
+
+              for (let i = 0; i < totalSlots; i++) {
+                const col = i % 2;
+                const row = Math.floor(i / 2);
+                const photoIndex = row;
+                const src = photos[photoIndex];
+
+                if (src) {
+                  slotElements.push(
+                    <div 
+                      key={i} 
+                      className={`${styles.photoSlot} ${activeMobileSlot === i ? styles.activeSlot : ''}`} 
+                      style={{ animationDelay: `${i * 0.05}s` }}
+                      onClick={() => setActiveMobileSlot(activeMobileSlot === i ? null : i)}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt={`Foto ${photoIndex + 1}`} className={styles.photo} />
+                      {col === 0 && (
+                        <div className={styles.photoOverlay} style={{ flexDirection: 'column', gap: '8px' }}>
+                          <button
+                            className={`btn btn-sm btn-secondary`}
+                            onClick={(e) => { e.stopPropagation(); setPreviewPhoto(src); }}
+                          >
+                            🔍 Detail
+                          </button>
+                          <button
+                            className={`btn btn-sm btn-danger`}
+                            onClick={(e) => { e.stopPropagation(); retakePhoto(photoIndex); }}
+                          >
+                            🔁 Retake
+                          </button>
+                        </div>
+                      )}
+                      <span className={styles.photoNum}>{photoIndex + 1}</span>
+                    </div>
+                  );
+                } else {
+                  slotElements.push(
+                    <div key={`empty-${i}`} className={`${styles.photoSlot} ${styles.emptySlot}`}>
+                      <span>{photoIndex + 1}</span>
+                    </div>
+                  );
+                }
+              }
+
+              return (
+                <div className={styles.photoGrid} id="photo-result">
+                  {slotElements}
                 </div>
-                <span className={styles.photoNum}>{i + 1}</span>
+              );
+            }
+
+            // Fallback for linear / strip
+            return (
+              <div className={(layout === 'strip' || layout === 'strip3') ? styles.photoStrip : styles.photoGrid} id="photo-result">
+                {photos.map((src, i) => (
+                  <div 
+                    key={i} 
+                    className={`${styles.photoSlot} ${activeMobileSlot === i ? styles.activeSlot : ''}`} 
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                    onClick={() => setActiveMobileSlot(activeMobileSlot === i ? null : i)}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={src} alt={`Foto ${i + 1}`} className={styles.photo} />
+                    <div className={styles.photoOverlay} style={{ flexDirection: 'column', gap: '8px' }}>
+                      <button
+                        className={`btn btn-sm btn-secondary`}
+                        onClick={(e) => { e.stopPropagation(); setPreviewPhoto(src); }}
+                      >
+                        🔍 Detail
+                      </button>
+                      <button
+                        className={`btn btn-sm btn-danger`}
+                        onClick={(e) => { e.stopPropagation(); retakePhoto(i); }}
+                      >
+                        🔁 Retake
+                      </button>
+                    </div>
+                    <span className={styles.photoNum}>{i + 1}</span>
+                  </div>
+                ))}
+                {Array.from({ length: maxPhotos - photos.length }).map((_, i) => (
+                  <div key={`empty-${i}`} className={`${styles.photoSlot} ${styles.emptySlot}`}>
+                    <span>{photos.length + i + 1}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-            {/* Empty slots */}
-            {Array.from({ length: maxPhotos - photos.length }).map((_, i) => (
-              <div key={`empty-${i}`} className={`${styles.photoSlot} ${styles.emptySlot}`}>
-                <span>{photos.length + i + 1}</span>
-              </div>
-            ))}
-          </div>
+            );
+          })()}
 
           {/* Action Buttons */}
           <div className={styles.actionBar}>
@@ -325,28 +371,10 @@ export default function BoothClient() {
                 }
               }}
               disabled={photos.length === 0}
+              style={{ fontSize: '18px', padding: '16px' }}
             >
-              🎨 Selesai & Edit Foto
+              🎨 Pilih Template
             </button>
-
-            <div className={styles.actionRow}>
-              <button
-                id="btn-print"
-                className="btn btn-secondary flex-1"
-                onClick={handlePrint}
-                disabled={photos.length === 0 || isPrinting}
-              >
-                {isPrinting ? <><span className="spinner" /> Menyiapkan...</> : '🖨️ Print'}
-              </button>
-              <button
-                id="btn-email"
-                className="btn btn-gold flex-1"
-                onClick={() => setShowEmailModal(true)}
-                disabled={photos.length === 0}
-              >
-                📧 Email
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -375,6 +403,23 @@ export default function BoothClient() {
           <p>📸 PhotoBooth App · {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </div>
       </div>
+      {/* Detail Preview Modal */}
+      {previewPhoto && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setPreviewPhoto(null)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={previewPhoto} style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', border: '2px solid white', borderRadius: '8px' }} alt="Detail Preview" />
+          <button 
+            className="btn btn-secondary" 
+            style={{ position: 'absolute', top: '20px', right: '20px' }}
+            onClick={(e) => { e.stopPropagation(); setPreviewPhoto(null); }}
+          >
+            ❌ Tutup
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,9 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Stage, Layer, Rect, Image as KonvaImage, Group, Text, Transformer } from 'react-konva';
-import styles from './CanvasEditor.module.css';
-import { Template } from '@/lib/templates';
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  Stage,
+  Layer,
+  Rect,
+  Image as KonvaImage,
+  Group,
+  Text,
+  Transformer,
+} from "react-konva";
+import styles from "./CanvasEditor.module.css";
+import { Template } from "@/lib/templates";
 
 export interface PhotoSlot {
   id: string;
@@ -19,12 +27,20 @@ export interface PhotoSlot {
 
 interface Props {
   photos: string[];
-  layout: 'strip' | 'grid' | 'grid2x2' | 'grid3x2' | 'single' | 'strip3';
+  layout:
+    | "strip"
+    | "grid2x2"
+    | "grid3x2"
+    | "single"
+    | "strip3"
+    | "grid"
+    | "grid2x3"
+    | "grid2x4";
   template: Template;
   customText: string;
   showDate: boolean;
   onExport: (dataUrl: string) => void;
-  
+
   // New layout adjustment props
   slots: PhotoSlot[];
   setSlots: (slots: PhotoSlot[]) => void;
@@ -44,7 +60,7 @@ function useCanvasImage(src?: string) {
       return;
     }
     const image = new window.Image();
-    image.crossOrigin = 'anonymous';
+    image.crossOrigin = "anonymous";
     image.src = src;
     image.onload = () => setImg(image);
     image.onerror = () => setImg(null);
@@ -66,13 +82,13 @@ export default function CanvasEditor({
   isLayoutLocked,
   aspectRatio,
   autoFill,
-  enablePhotoDrag = false
+  enablePhotoDrag = false,
 }: Props) {
   const [loadedPhotos, setLoadedPhotos] = useState<HTMLImageElement[]>([]);
   const stageRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // For responsive scaling of the editor stage
   const [scaleFactor, setScaleFactor] = useState(1);
 
@@ -80,36 +96,36 @@ export default function CanvasEditor({
   let virtualWidth = 1200;
   let virtualHeight = 1800; // default 2:3
 
-  if (aspectRatio === '1:3') {
+  if (aspectRatio === "1:3") {
     virtualWidth = 600;
     virtualHeight = 1800;
-  } else if (aspectRatio === '1:1') {
+  } else if (aspectRatio === "1:1") {
     virtualWidth = 1200;
     virtualHeight = 1200;
-  } else if (aspectRatio === '3:4') {
+  } else if (aspectRatio === "3:4") {
     virtualWidth = 1200;
     virtualHeight = 1600;
   }
 
   // Load photos
   useEffect(() => {
-    const promises = photos.map(src => {
+    const promises = photos.map((src) => {
       return new Promise<HTMLImageElement>((resolve) => {
         const img = new window.Image();
-        img.crossOrigin = 'anonymous';
+        img.crossOrigin = "anonymous";
         img.src = src;
         img.onload = () => resolve(img);
         img.onerror = () => resolve(img); // resolve even if error to keep index mapping
       });
     });
-    Promise.all(promises).then(imgs => setLoadedPhotos(imgs));
+    Promise.all(promises).then((imgs) => setLoadedPhotos(imgs));
   }, [photos]);
 
   // Load overlay
   const overlayImg = useCanvasImage(
     template.overlayImage
-      ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${template.overlayImage}`
-      : undefined
+      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}${template.overlayImage}`
+      : undefined,
   );
 
   // Compute scale factor to fit the container visually
@@ -119,30 +135,30 @@ export default function CanvasEditor({
     const pad = 32;
     const availW = container.clientWidth - pad;
     const availH = container.clientHeight - pad;
-    
+
     const factor = Math.min(availW / virtualWidth, availH / virtualHeight);
     setScaleFactor(Math.min(factor, 1));
   }, [virtualWidth, virtualHeight]);
 
   useEffect(() => {
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [handleResize]);
 
   // High quality stage image export
   const triggerExport = useCallback(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    
+
     // Hide transformer and selection boxes before export
     const transformer = transformerRef.current;
     if (transformer) transformer.nodes([]);
-    
+
     const dataUrl = stage.toDataURL({
-      mimeType: 'image/jpeg',
+      mimeType: "image/jpeg",
       quality: 0.92,
-      pixelRatio: 1
+      pixelRatio: 1,
     });
 
     // Restore transformer if not locked
@@ -150,7 +166,7 @@ export default function CanvasEditor({
       const selectedNode = stage.findOne(`#${selectedSlotId}`);
       if (selectedNode) transformer.nodes([selectedNode]);
     }
-    
+
     onExport(dataUrl);
   }, [onExport, selectedSlotId, isLayoutLocked]);
 
@@ -160,7 +176,17 @@ export default function CanvasEditor({
       triggerExport();
     }, 400);
     return () => clearTimeout(timer);
-  }, [triggerExport, slots, customText, showDate, template, loadedPhotos, overlayImg, aspectRatio, autoFill]);
+  }, [
+    triggerExport,
+    slots,
+    customText,
+    showDate,
+    template,
+    loadedPhotos,
+    overlayImg,
+    aspectRatio,
+    autoFill,
+  ]);
 
   // Bind transformer to the selected slot node
   useEffect(() => {
@@ -179,26 +205,26 @@ export default function CanvasEditor({
   const getPhotoPlacement = (img: HTMLImageElement, slot: PhotoSlot) => {
     const photoW = img.width || 640;
     const photoH = img.height || 480;
-    
+
     // Calculate scale to cover the slot
     const scale = Math.max(slot.width / photoW, slot.height / photoH);
     return {
       width: photoW * scale * slot.imageScale,
-      height: photoH * scale * slot.imageScale
+      height: photoH * scale * slot.imageScale,
     };
   };
 
   return (
     <div className={styles.wrapper} ref={containerRef}>
-      <div 
+      <div
         style={{
           transform: `scale(${scaleFactor})`,
-          transformOrigin: 'center center',
+          transformOrigin: "center center",
           width: virtualWidth,
           height: virtualHeight,
-          boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
+          boxShadow: "0 12px 36px rgba(0,0,0,0.5)",
           background: template.backgroundColor,
-          position: 'relative'
+          position: "relative",
         }}
       >
         <Stage
@@ -226,15 +252,20 @@ export default function CanvasEditor({
             {slots.map((slot, slotIdx) => {
               // Determine if we should auto-fill or if there's a specific photo index
               let finalPhotoIndex = slot.photoIndex;
-              if (finalPhotoIndex === -1 && autoFill && loadedPhotos.length > 0) {
+              if (
+                finalPhotoIndex === -1 &&
+                autoFill &&
+                loadedPhotos.length > 0
+              ) {
                 finalPhotoIndex = slotIdx % loadedPhotos.length;
               }
 
-              const photoImg = (finalPhotoIndex !== -1 && loadedPhotos[finalPhotoIndex]) 
-                ? loadedPhotos[finalPhotoIndex] 
-                : undefined;
+              const photoImg =
+                finalPhotoIndex !== -1 && loadedPhotos[finalPhotoIndex]
+                  ? loadedPhotos[finalPhotoIndex]
+                  : undefined;
               const isSelected = selectedSlotId === slot.id;
-              
+
               return (
                 <Group
                   key={slot.id}
@@ -253,7 +284,7 @@ export default function CanvasEditor({
                   onDragEnd={(e) => {
                     if (e.target !== e.currentTarget) return;
                     const node = e.target;
-                    const updatedSlots = slots.map(s => {
+                    const updatedSlots = slots.map((s) => {
                       if (s.id === slot.id) {
                         return { ...s, x: node.x(), y: node.y() };
                       }
@@ -266,19 +297,19 @@ export default function CanvasEditor({
                     const node = e.target;
                     const scaleX = node.scaleX();
                     const scaleY = node.scaleY();
-                    
+
                     // Reset scaling on the node itself to prevent coordinate issues
                     node.scaleX(1);
                     node.scaleY(1);
-                    
-                    const updatedSlots = slots.map(s => {
+
+                    const updatedSlots = slots.map((s) => {
                       if (s.id === slot.id) {
                         return {
                           ...s,
                           x: node.x(),
                           y: node.y(),
                           width: Math.max(50, node.width() * scaleX),
-                          height: Math.max(50, node.height() * scaleY)
+                          height: Math.max(50, node.height() * scaleY),
                         };
                       }
                       return s;
@@ -296,13 +327,18 @@ export default function CanvasEditor({
                     stroke={template.hasFrame ? template.frameColor : undefined}
                     strokeWidth={template.hasFrame ? 2 : 0}
                   />
-                  
+
                   {photoImg ? (
                     (() => {
                       const placement = getPhotoPlacement(photoImg, slot);
-                      const isUnadjusted = slot.imageX === 0 && slot.imageY === 0;
-                      const defaultX = isUnadjusted ? (slot.width - placement.width) / 2 : slot.imageX;
-                      const defaultY = isUnadjusted ? (slot.height - placement.height) / 2 : slot.imageY;
+                      const isUnadjusted =
+                        slot.imageX === 0 && slot.imageY === 0;
+                      const defaultX = isUnadjusted
+                        ? (slot.width - placement.width) / 2
+                        : slot.imageX;
+                      const defaultY = isUnadjusted
+                        ? (slot.height - placement.height) / 2
+                        : slot.imageY;
 
                       return (
                         <KonvaImage
@@ -315,31 +351,38 @@ export default function CanvasEditor({
                           onMouseEnter={(e) => {
                             if (enablePhotoDrag) {
                               const stage = e.target.getStage();
-                              if (stage) stage.container().style.cursor = 'grab';
+                              if (stage)
+                                stage.container().style.cursor = "grab";
                             }
                           }}
                           onMouseLeave={(e) => {
                             if (enablePhotoDrag) {
                               const stage = e.target.getStage();
-                              if (stage) stage.container().style.cursor = 'default';
+                              if (stage)
+                                stage.container().style.cursor = "default";
                             }
                           }}
                           onDragStart={(e) => {
                             if (enablePhotoDrag) {
                               const stage = e.target.getStage();
-                              if (stage) stage.container().style.cursor = 'grabbing';
+                              if (stage)
+                                stage.container().style.cursor = "grabbing";
                             }
                           }}
                           onDragEnd={(e) => {
                             e.cancelBubble = true; // Prevent event from bubbling up to Group
                             const stage = e.target.getStage();
                             if (stage && enablePhotoDrag) {
-                              stage.container().style.cursor = 'grab';
+                              stage.container().style.cursor = "grab";
                             }
                             const node = e.target;
-                            const updatedSlots = slots.map(s => {
+                            const updatedSlots = slots.map((s) => {
                               if (s.id === slot.id) {
-                                return { ...s, imageX: node.x(), imageY: node.y() };
+                                return {
+                                  ...s,
+                                  imageX: node.x(),
+                                  imageY: node.y(),
+                                };
                               }
                               return s;
                             });
@@ -381,8 +424,8 @@ export default function CanvasEditor({
               <Rect
                 x={template.frameWidth / 6}
                 y={template.frameWidth / 6}
-                width={virtualWidth - (template.frameWidth / 3)}
-                height={virtualHeight - (template.frameWidth / 3)}
+                width={virtualWidth - template.frameWidth / 3}
+                height={virtualHeight - template.frameWidth / 3}
                 stroke={template.frameColor}
                 strokeWidth={template.frameWidth / 3}
                 listening={false}
@@ -390,31 +433,36 @@ export default function CanvasEditor({
             )}
 
             {/* Footer Area (Text/Logo/Date) */}
-            <Group x={0} y={virtualHeight - 150} width={virtualWidth} height={150}>
+            <Group
+              x={0}
+              y={virtualHeight - 150}
+              width={virtualWidth}
+              height={150}
+            >
               <Rect
                 x={0}
                 y={0}
                 width={virtualWidth}
                 height={150}
-                fill={template.frameColor + '11'}
+                fill={template.frameColor + "11"}
                 listening={false}
               />
-              
+
               {customText && (
                 <Text
                   x={0}
                   y={30}
                   width={virtualWidth}
                   text={customText}
-                  fontSize={aspectRatio === '1:3' ? 24 : 28}
-                  fontFamily={template.fonts || 'sans-serif'}
+                  fontSize={aspectRatio === "1:3" ? 24 : 28}
+                  fontFamily={template.fonts || "sans-serif"}
                   fontStyle="bold"
                   fill={template.textColor}
                   align="center"
                   listening={false}
                 />
               )}
-              
+
               {template.hasLogo && (
                 <Text
                   x={0}
@@ -422,7 +470,7 @@ export default function CanvasEditor({
                   width={virtualWidth}
                   text="📸 PhotoBooth"
                   fontSize={18}
-                  fontFamily={template.fonts || 'sans-serif'}
+                  fontFamily={template.fonts || "sans-serif"}
                   fontStyle="bold"
                   fill={template.accentColor}
                   align="center"
@@ -435,10 +483,14 @@ export default function CanvasEditor({
                   x={0}
                   y={customText ? 110 : 90}
                   width={virtualWidth}
-                  text={new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  text={new Date().toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
                   fontSize={14}
-                  fontFamily={template.fonts || 'sans-serif'}
-                  fill={template.textColor + 'aa'}
+                  fontFamily={template.fonts || "sans-serif"}
+                  fill={template.textColor + "aa"}
                   align="center"
                   listening={false}
                 />

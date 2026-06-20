@@ -16,6 +16,11 @@
   animation: shutter 0.5s ease forwards;
 }
 
+@keyframes shutter {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* Header */
 .header {
   display: flex;
@@ -56,7 +61,7 @@
   flex: 1;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 767px) {
   .main {
     grid-template-columns: 1fr;
   }
@@ -73,7 +78,7 @@
 .cameraWrapper {
   position: relative;
   flex: 1;
-  background: #050508;
+  background: radial-gradient(circle at center, rgba(236, 178, 255, 0.1) 0%, #000 70%);
   aspect-ratio: 16/9;
   overflow: hidden;
 }
@@ -107,19 +112,19 @@
 /* Countdown */
 .countdownOverlay {
   position: absolute;
-  inset: 0;
+  top: 32px;
+  right: 32px;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
 }
 
 .countdownNum {
-  font-size: 120px;
+  font-size: 80px;
   font-weight: 800;
   color: white;
-  text-shadow: 0 0 40px rgba(200, 80, 192, 0.8);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(200, 80, 192, 0.8);
   animation: countdown-pop 1s ease forwards;
   line-height: 1;
 }
@@ -157,8 +162,10 @@
 /* Camera Controls */
 .cameraControls {
   padding: 16px 24px;
-  background: rgba(10, 10, 20, 0.95);
-  border-top: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -186,8 +193,10 @@
 
 /* Right Panel */
 .rightPanel {
-  border-left: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -238,10 +247,30 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.2s ease;
 }
 
-.photoSlot:hover .photoOverlay { opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .photoSlot:hover .photoOverlay { 
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (hover: none) and (pointer: coarse), (max-width: 1024px) {
+  .photoSlot.activeSlot .photoOverlay {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+  }
+  .photoSlot .btn {
+    backdrop-filter: blur(4px);
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+  }
+}
 
 .photoNum {
   position: absolute;

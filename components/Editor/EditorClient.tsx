@@ -12,7 +12,7 @@ import { Template } from '@/lib/templates';
 
 function getInitialSlots(
   ratio: string,
-  layoutType: 'strip' | 'grid2x2' | 'grid3x2' | 'single' | 'strip3' | 'grid',
+  layoutType: 'grid2x3' | 'grid2x4' | 'strip' | 'grid2x2' | 'grid3x2' | 'single' | 'strip3' | 'grid',
   photoCount: number,
   padding: number
 ): PhotoSlot[] {
@@ -103,6 +103,54 @@ function getInitialSlots(
         imageY: 0
       });
     }
+  } else if (layoutType === 'grid2x3') {
+    // 3 rows, 2 columns (Left is photo 0,1,2. Right is photo 0,1,2 - mirrored)
+    const rows = 3;
+    const cols = 2;
+    const sideMargin = padding * 1.5;
+    const totalW = w - sideMargin * 2;
+    const slotW = (totalW - padding) / cols;
+    const slotH = (usableHeight - padding * 2 - padding * 2) / rows;
+
+    for (let i = 0; i < 6; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      slots.push({
+        id: `slot-${i}`,
+        photoIndex: row < photoCount ? row : -1, // Use row as the photo index (0, 1, 2)
+        x: sideMargin + col * (slotW + padding),
+        y: padding + row * (slotH + padding),
+        width: slotW,
+        height: slotH,
+        imageScale: 1,
+        imageX: 0,
+        imageY: 0
+      });
+    }
+  } else if (layoutType === 'grid2x4') {
+    // 4 rows, 2 columns (Left is photo 0,1,2,3. Right is photo 0,1,2,3 - mirrored)
+    const rows = 4;
+    const cols = 2;
+    const sideMargin = padding * 1.5;
+    const totalW = w - sideMargin * 2;
+    const slotW = (totalW - padding) / cols;
+    const slotH = (usableHeight - padding * 2 - padding * 3) / rows;
+
+    for (let i = 0; i < 8; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      slots.push({
+        id: `slot-${i}`,
+        photoIndex: row < photoCount ? row : -1, // Use row as the photo index (0, 1, 2, 3)
+        x: sideMargin + col * (slotW + padding),
+        y: padding + row * (slotH + padding),
+        width: slotW,
+        height: slotH,
+        imageScale: 1,
+        imageX: 0,
+        imageY: 0
+      });
+    }
   } else {
     // single photo
     const sideMargin = padding * 1.5;
@@ -126,12 +174,14 @@ function getInitialSlots(
 
 export default function EditorClient() {
   const [photos, setPhotos] = useState<string[]>([]);
-  const [layout, setLayout] = useState<'strip' | 'grid2x2' | 'grid3x2' | 'grid' | 'single' | 'strip3'>('strip');
+  const [layout, setLayout] = useState<'grid2x3' | 'grid2x4' | 'strip' | 'grid2x2' | 'grid3x2' | 'grid' | 'single' | 'strip3'>('strip');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   
   // Dynamic customized template configuration
   const [dynamicTemplate, setDynamicTemplate] = useState<Template | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   
   const [customText, setCustomText] = useState('');
   const [showDate, setShowDate] = useState(true);
@@ -184,15 +234,21 @@ export default function EditorClient() {
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data.length > 0) {
-          setTemplates(data.data);
-          const found = data.data.find((t: Template) => t.id === tplId);
+          let layoutTemplates = data.data;
+          if (savedLayout) {
+             layoutTemplates = data.data.filter((t: Template) => t.layout === savedLayout);
+             if (layoutTemplates.length === 0) layoutTemplates = data.data; // fallback if no templates for layout
+          }
+          setTemplates(layoutTemplates);
+
+          const found = layoutTemplates.find((t: Template) => t.id === tplId);
           if (found) {
             setSelectedTemplate(found);
             setLayout(found.layout as any);
             const defaultRatio = found.aspectRatio || (found.layout === 'strip' ? '1:3' : '2:3');
             setAspectRatio(defaultRatio);
           } else {
-            const fallback = data.data[0];
+            const fallback = layoutTemplates[0];
             setSelectedTemplate(fallback);
             setLayout(fallback.layout as any);
             const defaultRatio = fallback.aspectRatio || (fallback.layout === 'strip' ? '1:3' : '2:3');
@@ -201,6 +257,16 @@ export default function EditorClient() {
         }
       })
       .catch(err => console.error('Failed to load templates:', err));
+
+    // Fetch categories
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/categories`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setCategories(data.data);
+        }
+      })
+      .catch(err => console.error('Failed to load categories:', err));
 
     // Fetch settings to check if WhatsApp share is enabled
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/settings`)
@@ -230,9 +296,9 @@ export default function EditorClient() {
         try {
           const parsedSlots = JSON.parse(dynamicTemplate.slotsJson);
           if (Array.isArray(parsedSlots) && parsedSlots.length > 0) {
-            const mappedSlots = parsedSlots.map((s, idx) => ({
+            const mappedSlots = parsedSlots.map((s) => ({
               ...s,
-              photoIndex: idx < photos.length ? idx : -1
+              photoIndex: s.photoIndex !== undefined && s.photoIndex !== null && s.photoIndex < photos.length ? s.photoIndex : -1
             }));
             setSlots(mappedSlots);
             setSelectedSlotId(null);
@@ -507,52 +573,6 @@ export default function EditorClient() {
 
   return (
     <div className={styles.wrapper}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <Link href="/booth" className="btn btn-secondary btn-sm">← Kembali ke Booth</Link>
-          <h1 className={styles.title}>🎨 Editor Template</h1>
-        </div>
-        <div className={styles.headerRight}>
-          <button id="btn-download" className="btn btn-secondary btn-sm" onClick={handleDownload} disabled={!finalImage}>
-            ⬇️ Download
-          </button>
-          <button id="btn-print-editor" className="btn btn-secondary btn-sm" onClick={handlePrint} disabled={!finalImage}>
-            🖨️ Print
-          </button>
-          <button id="btn-email-editor" className="btn btn-gold btn-sm" onClick={() => setShowEmailModal(true)} disabled={!finalImage}>
-            📧 Kirim Email
-          </button>
-          <button
-            id="btn-drive-editor"
-            className="btn btn-primary btn-sm"
-            style={{ background: 'var(--teal)', borderColor: 'var(--teal)' }}
-            onClick={uploadToGoogleDrive}
-            disabled={!finalImage || isUploadingToDrive}
-          >
-            {isUploadingToDrive ? (
-              <>
-                <span className="spinner" style={{ marginRight: '6px', width: '12px', height: '12px' }} />
-                Uploading...
-              </>
-            ) : (
-              '☁️ Upload Drive'
-            )}
-          </button>
-          <button
-            id="btn-finish"
-            className="btn btn-primary btn-sm"
-            style={{ background: 'linear-gradient(135deg, #e91e8c 0%, #c850c0 100%)', borderColor: 'transparent', fontWeight: 'bold' }}
-            onClick={handleAutoFinish}
-            disabled={isFinishingAuto || !finalImage}
-          >
-            {isFinishingAuto ? 'Processing...' : '🎉 Cetak & Selesai Sesi'}
-          </button>
-
-
-        </div>
-      </header>
-
       <div className={styles.main}>
         {/* Left Panel — Tools */}
         <div className={styles.leftPanel}>
@@ -620,8 +640,22 @@ export default function EditorClient() {
                       flexDirection: 'column',
                       gap: '8px'
                     }}>
+                      <div style={{ marginBottom: '8px' }}>
+                        <select 
+                          className="input" 
+                          value={selectedCategory} 
+                          onChange={e => setSelectedCategory(e.target.value)}
+                          style={{ width: '100%', fontSize: '13px', padding: '8px' }}
+                        >
+                          <option value="">Semua Kategori</option>
+                          {categories.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
                       <TemplatePicker
-                        templates={templates}
+                        templates={selectedCategory ? templates.filter((t: any) => t.categoryId === selectedCategory) : templates}
                         selected={selectedTemplate}
                         onSelect={(t) => {
                           setSelectedTemplate(t);
@@ -810,6 +844,39 @@ export default function EditorClient() {
               )}
             </>
           )}
+
+          {/* Action Buttons (Moved from header) */}
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+            <Link href="/booth" className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'center' }}>← Kembali ke Booth</Link>
+            <button id="btn-download" className="btn btn-secondary btn-sm" onClick={handleDownload} disabled={!finalImage} style={{ justifyContent: 'center' }}>⬇️ Download</button>
+            <button id="btn-print-editor" className="btn btn-secondary btn-sm" onClick={handlePrint} disabled={!finalImage} style={{ justifyContent: 'center' }}>🖨️ Print</button>
+            <button id="btn-email-editor" className="btn btn-gold btn-sm" onClick={() => setShowEmailModal(true)} disabled={!finalImage} style={{ justifyContent: 'center' }}>📧 Kirim Email</button>
+            <button
+              id="btn-drive-editor"
+              className="btn btn-primary btn-sm"
+              style={{ background: 'var(--teal)', borderColor: 'var(--teal)', justifyContent: 'center' }}
+              onClick={uploadToGoogleDrive}
+              disabled={!finalImage || isUploadingToDrive}
+            >
+              {isUploadingToDrive ? (
+                <>
+                  <span className="spinner" style={{ marginRight: '6px', width: '12px', height: '12px' }} />
+                  Uploading...
+                </>
+              ) : (
+                '☁️ Upload Drive'
+              )}
+            </button>
+            <button
+              id="btn-finish"
+              className="btn btn-primary btn-sm"
+              style={{ background: 'var(--gradient-primary)', borderColor: 'transparent', fontWeight: 'bold', justifyContent: 'center' }}
+              onClick={handleAutoFinish}
+              disabled={isFinishingAuto || !finalImage}
+            >
+              {isFinishingAuto ? 'Processing...' : '🎉 Cetak & Selesai Sesi'}
+            </button>
+          </div>
         </div>
 
         {/* Center — Canvas Editor */}

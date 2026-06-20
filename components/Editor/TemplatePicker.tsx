@@ -28,9 +28,18 @@ export default function TemplatePicker({ templates, selected, onSelect }: Props)
                 className={(t.layout === 'strip' || t.layout === 'strip3') ? styles.previewStrip : styles.previewGrid}
                 style={{ borderColor: t.frameColor }}
               >
-                {Array.from({ length: Math.min(t.photoCount, 4) }).map((_, i) => (
-                  <div key={i} className={styles.previewPhoto} style={{ background: t.frameColor + '33' }} />
-                ))}
+                {(() => {
+                  let totalSlots = t.photoCount;
+                  if (t.layout === 'grid2x3') totalSlots = 6;
+                  else if (t.layout === 'grid2x4') totalSlots = 8;
+                  else if (t.layout === 'grid2x2') totalSlots = 4;
+                  else if (t.layout === 'strip3') totalSlots = 3;
+                  else if (t.layout === 'strip') totalSlots = 4;
+                  
+                  return Array.from({ length: totalSlots }).map((_, i) => (
+                    <div key={i} className={styles.previewPhoto} style={{ background: t.frameColor + '33' }} />
+                  ));
+                })()}
               </div>
               {/* Color dots */}
               <div className={styles.colorDots}>
