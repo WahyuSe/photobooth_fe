@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import styles from './EditorClient.module.css';
 import TemplatePicker from './TemplatePicker';
 import CanvasEditor, { PhotoSlot } from './CanvasEditor';
 import EmailModal from '@/components/UI/EmailModal';
@@ -324,10 +323,10 @@ export default function EditorClient() {
     const sessionId = localStorage.getItem('pb_session_id');
     if (sessionId) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/sessions/${sessionId}/status`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/sessions/complete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'FINISHED' })
+          body: JSON.stringify({ sessionId })
         });
       } catch (e) {
         console.error(e);
@@ -572,13 +571,13 @@ export default function EditorClient() {
   };
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.main}>
+    <div className={"flex flex-col h-screen overflow-hidden bg-[#0a0a0f]"}>
+      <div className={"grid grid-cols-1 md:grid-cols-[320px_1fr] flex-1 min-h-0"}>
         {/* Left Panel — Tools */}
-        <div className={styles.leftPanel}>
+        <div className={"border-r border-white/10 bg-white/5 backdrop-blur-[20px] p-5 overflow-y-auto h-full flex flex-col gap-4"}>
           {/* Upload photos */}
           {photos.length === 0 && (
-            <div className={styles.uploadZone}>
+            <div className={"flex flex-col items-center gap-3 py-8 px-5 border-2 border-dashed border-white/10 rounded-lg text-center text-white/80"}>
               <span>📁</span>
               <p>Upload foto untuk diedit</p>
               <label className="btn btn-primary btn-sm" htmlFor="file-upload">
@@ -599,17 +598,17 @@ export default function EditorClient() {
           {photos.length > 0 && (
             <>
               {/* Tab switcher */}
-              <div className={styles.tabs}>
+              <div className={"flex gap-1 bg-white/5 rounded-md p-1 mb-2"}>
                 <button
                   id="tab-layout"
-                  className={`${styles.tab} ${activeTab === 'layout' ? styles.tabActive : ''}`}
+                  className={`flex-1 py-2.5 px-2 text-[11px] font-semibold rounded-md text-white/80 transition-all bg-transparent border-none cursor-pointer flex items-center justify-center gap-1 ${activeTab === 'layout' ? "!bg-gradient-to-r !from-[#bd00ff] !to-[#7b00cc] !text-white shadow-[0_4px_12px_rgba(233,30,140,0.25)]" : ''}`}
                   onClick={() => setActiveTab('layout')}
                 >
                   📐 Tata Letak & Bingkai
                 </button>
                 <button
                   id="tab-text"
-                  className={`${styles.tab} ${activeTab === 'text' ? styles.tabActive : ''}`}
+                  className={`flex-1 py-2.5 px-2 text-[11px] font-semibold rounded-md text-white/80 transition-all bg-transparent border-none cursor-pointer flex items-center justify-center gap-1 ${activeTab === 'text' ? "!bg-gradient-to-r !from-[#bd00ff] !to-[#7b00cc] !text-white shadow-[0_4px_12px_rgba(233,30,140,0.25)]" : ''}`}
                   onClick={() => setActiveTab('text')}
                 >
                   ✍️ Teks & Tanggal
@@ -618,12 +617,12 @@ export default function EditorClient() {
 
               {/* Layout Panel */}
               {activeTab === 'layout' && (
-                <div className={styles.layoutControls}>
-                  <div className={styles.instructionCard}>
-                    <strong style={{ fontSize: '13px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
+                <div className={"flex flex-col gap-3.5"}>
+                  <div className={"p-3 bg-white/5 border border-white/10 rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)]"}>
+                    <strong style={{ fontSize: '13px', color: 'white', display: 'block', marginBottom: '4px' }}>
                       📸 Sesuaikan Posisi Foto
                     </strong>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                    <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', lineHeight: '1.4' }}>
                       Tata letak frame telah dikonfigurasi secara presisi oleh Admin. 
                       Anda dapat menggeser foto di dalam frame untuk memposisikan wajah secara pas, atau klik kotak foto untuk mengatur zoom.
                     </span>
@@ -681,20 +680,20 @@ export default function EditorClient() {
                     marginTop: '2px'
                   }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingRight: '12px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'white' }}>
                         🔄 Isi Otomatis Slot Kosong
                       </span>
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)' }}>
                         Ulangi foto yang diambil untuk mengisi frame kosong
                       </span>
                     </div>
                     <button
-                      className={`${styles.toggle} ${autoFill ? styles.toggleOn : ''}`}
+                      className={`w-10 h-[22px] rounded-full bg-white/10 border border-white/10 relative cursor-pointer transition-colors ${autoFill ? "!bg-[#bd00ff] !border-[#bd00ff] shadow-[0_0_10px_rgba(233,30,140,0.4)]" : ''}`}
                       onClick={() => setAutoFill(p => !p)}
                       type="button"
                       style={{ flexShrink: 0 }}
                     >
-                      <span className={styles.toggleThumb} />
+                      <span className={"absolute top-[1px] left-[1px] w-4 h-4 rounded-full bg-white transition-transform toggleThumb-class"} />
                     </button>
                   </div>
 
@@ -710,15 +709,15 @@ export default function EditorClient() {
                     marginTop: '6px'
                   }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingRight: '12px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'white' }}>
                         🖐️ Mode Geser Posisi Foto
                       </span>
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)' }}>
                         Geser foto di dalam bingkai untuk memposisikan wajah
                       </span>
                     </div>
                     <button
-                      className={`${styles.toggle} ${enablePhotoDrag ? styles.toggleOn : ''}`}
+                      className={`w-10 h-[22px] rounded-full bg-white/10 border border-white/10 relative cursor-pointer transition-colors ${enablePhotoDrag ? "!bg-[#bd00ff] !border-[#bd00ff] shadow-[0_0_10px_rgba(233,30,140,0.4)]" : ''}`}
                       onClick={() => {
                         setEnablePhotoDrag(p => !p);
                         addToast('info', !enablePhotoDrag ? 'Mode geser foto aktif! Seret foto pada kanvas 🖐️' : 'Mode geser foto dinonaktifkan 🔒');
@@ -726,17 +725,17 @@ export default function EditorClient() {
                       type="button"
                       style={{ flexShrink: 0 }}
                     >
-                      <span className={styles.toggleThumb} />
+                      <span className={"absolute top-[1px] left-[1px] w-4 h-4 rounded-full bg-white transition-transform toggleThumb-class"} />
                     </button>
                   </div>
 
                   {/* Selected Slot controls */}
                   {selectedSlotId && selectedSlot ? (
-                    <div className={styles.selectedSlotCard}>
-                      <h4 className={styles.selectedSlotTitle}>🎯 Slot Foto Terpilih</h4>
+                    <div className={"border border-white/10 rounded-md p-3.5 bg-white/5 flex flex-col gap-3 shadow-[0_4px_20px_rgba(0,0,0,0.15)] animate-[fadeIn_0.3s_ease-out]"}>
+                      <h4 className={"text-[12px] font-bold text-[#ecb2ff] uppercase tracking-wider border-b border-white/10 pb-1.5 m-0"}>🎯 Slot Foto Terpilih</h4>
                       
                       {/* Photo selector */}
-                      <div className={styles.controlGroup}>
+                      <div className={"flex flex-col gap-1.5"}>
                         <label className="label" style={{ fontSize: '11px' }}>Tampilkan Foto:</label>
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                           {Array.from({ length: photos.length }).map((_, idx) => (
@@ -781,7 +780,7 @@ export default function EditorClient() {
                       </div>
 
                       {/* Zoom selector */}
-                      <div className={styles.controlGroup} style={{ marginTop: '14px' }}>
+                      <div className={"flex flex-col gap-1.5"} style={{ marginTop: '14px' }}>
                         <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
                           <label className="label" style={{ fontSize: '11px', margin: 0 }}>Zoom Foto</label>
                           <span style={{ fontSize: '11px', color: 'var(--pink-light)', fontWeight: 'bold' }}>{Math.round(selectedSlot.imageScale * 100)}%</span>
@@ -798,9 +797,9 @@ export default function EditorClient() {
                       </div>
                     </div>
                   ) : (
-                    <div className={styles.noSelectionCard}>
+                    <div className={"flex flex-col items-center justify-center py-6 px-4 bg-white/5 border border-dashed border-white/10 rounded-md text-center"}>
                       <span style={{ fontSize: '20px', marginBottom: '6px' }}>👆</span>
-                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0, textAlign: 'center' }}>
+                      <p style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', margin: 0, textAlign: 'center' }}>
                         Klik salah satu slot foto pada kanvas di sebelah kanan untuk memperbesar atau mengganti urutan foto.
                       </p>
                     </div>
@@ -819,7 +818,7 @@ export default function EditorClient() {
 
               {/* Text options */}
               {activeTab === 'text' && (
-                <div className={styles.textPanel}>
+                <div className={"flex flex-col gap-3.5"}>
                   <label className="label">Teks Kustom</label>
                   <input
                     id="input-custom-text"
@@ -829,15 +828,15 @@ export default function EditorClient() {
                     onChange={e => setCustomText(e.target.value)}
                     maxLength={40}
                   />
-                  <div className={styles.toggleRow}>
+                  <div className={"flex items-center justify-between py-2"}>
                     <label className="label" style={{ margin: 0 }}>Tampilkan Tanggal</label>
                     <button
                       id="toggle-date"
-                      className={`${styles.toggle} ${showDate ? styles.toggleOn : ''}`}
+                      className={`w-10 h-[22px] rounded-full bg-white/10 border border-white/10 relative cursor-pointer transition-colors ${showDate ? "!bg-[#bd00ff] !border-[#bd00ff] shadow-[0_0_10px_rgba(233,30,140,0.4)]" : ''}`}
                       onClick={() => setShowDate(p => !p)}
                       aria-pressed={showDate}
                     >
-                      <span className={styles.toggleThumb} />
+                      <span className={"absolute top-[1px] left-[1px] w-4 h-4 rounded-full bg-white transition-transform toggleThumb-class"} />
                     </button>
                   </div>
                 </div>
@@ -845,44 +844,15 @@ export default function EditorClient() {
             </>
           )}
 
-          {/* Action Buttons (Moved from header) */}
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
-            <Link href="/booth" className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'center' }}>← Kembali ke Booth</Link>
-            <button id="btn-download" className="btn btn-secondary btn-sm" onClick={handleDownload} disabled={!finalImage} style={{ justifyContent: 'center' }}>⬇️ Download</button>
-            <button id="btn-print-editor" className="btn btn-secondary btn-sm" onClick={handlePrint} disabled={!finalImage} style={{ justifyContent: 'center' }}>🖨️ Print</button>
-            <button id="btn-email-editor" className="btn btn-gold btn-sm" onClick={() => setShowEmailModal(true)} disabled={!finalImage} style={{ justifyContent: 'center' }}>📧 Kirim Email</button>
-            <button
-              id="btn-drive-editor"
-              className="btn btn-primary btn-sm"
-              style={{ background: 'var(--teal)', borderColor: 'var(--teal)', justifyContent: 'center' }}
-              onClick={uploadToGoogleDrive}
-              disabled={!finalImage || isUploadingToDrive}
-            >
-              {isUploadingToDrive ? (
-                <>
-                  <span className="spinner" style={{ marginRight: '6px', width: '12px', height: '12px' }} />
-                  Uploading...
-                </>
-              ) : (
-                '☁️ Upload Drive'
-              )}
-            </button>
-            <button
-              id="btn-finish"
-              className="btn btn-primary btn-sm"
-              style={{ background: 'var(--gradient-primary)', borderColor: 'transparent', fontWeight: 'bold', justifyContent: 'center' }}
-              onClick={handleAutoFinish}
-              disabled={isFinishingAuto || !finalImage}
-            >
-              {isFinishingAuto ? 'Processing...' : '🎉 Cetak & Selesai Sesi'}
-            </button>
-          </div>
+
         </div>
 
         {/* Center — Canvas Editor */}
-        <div className={styles.centerPanel}>
+        <div className={"flex flex-col items-center justify-center bg-[#0a0a0f] bg-[radial-gradient(circle_at_center,rgba(236,178,255,0.1)_0%,transparent_60%)] overflow-hidden relative min-h-0 h-full p-8"}>
           {photos.length > 0 && dynamicTemplate ? (
-            <CanvasEditor
+            <div className="flex flex-col items-center w-full h-full min-h-0 gap-6">
+              <div className="flex-1 w-full min-h-0 flex items-center justify-center">
+                <CanvasEditor
               photos={photos}
               layout={layout}
               template={dynamicTemplate}
@@ -898,8 +868,19 @@ export default function EditorClient() {
               autoFill={autoFill}
               enablePhotoDrag={enablePhotoDrag}
             />
+              </div>
+              <button
+                id="btn-finish"
+                className="btn btn-primary btn-sm"
+                style={{ background: 'var(--gradient-primary)', borderColor: 'transparent', fontWeight: 'bold', justifyContent: 'center', padding: '16px 40px', fontSize: '18px', borderRadius: '12px', boxShadow: '0 8px 24px rgba(233, 30, 140, 0.4)' }}
+                onClick={handleAutoFinish}
+                disabled={isFinishingAuto || !finalImage}
+              >
+                {isFinishingAuto ? 'Processing...' : '🎉 Cetak & Selesai Sesi'}
+              </button>
+            </div>
           ) : (
-            <div className={styles.emptyCanvas}>
+            <div className={"flex flex-col items-center gap-4 text-white/80"}>
               <span>🎨</span>
               <p>Canvas akan muncul setelah foto dimuat</p>
             </div>
@@ -916,26 +897,26 @@ export default function EditorClient() {
       )}
 
       {showAutoFinishModal && (
-        <div className="modal-overlay" style={{ zIndex: 10000 }}>
-          <div className="modal-box" style={{ maxWidth: '450px', width: '90%', textAlign: 'center', padding: '30px' }}>
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#1a1a24] border border-white/10 rounded-2xl shadow-2xl p-8" style={{ maxWidth: '450px', width: '90%', textAlign: 'center' }}>
             {isFinishingAuto ? (
               <div style={{ padding: '20px 0' }}>
                 <span className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 16px' }} />
                 <h3>Memproses Penyelesaian Sesi...</h3>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+                <p style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.8)', marginTop: '8px' }}>
                   Mengunggah foto hasil editan Anda ke Google Drive dan menyiapkan mesin cetak 🖨️
                 </p>
               </div>
             ) : (
               <div>
                 <h2 style={{ color: 'var(--teal)', marginBottom: '10px' }}>🎉 Sesi Photobooth Selesai!</h2>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+                <p style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '20px' }}>
                   Foto Anda sedang diproses untuk dicetak. Silakan ambil hasil cetak Anda di mesin printer! 🖨️
                 </p>
 
                 {googleDriveUrl ? (
                   <div style={{ margin: '15px 0' }}>
-                    <p style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '12px' }}>
+                    <p style={{ fontSize: '13px', fontWeight: 'bold', color: 'white', marginBottom: '12px' }}>
                       Scan QR Code ini untuk unduh versi digital HD ke HP Anda:
                     </p>
                     <div style={{
@@ -955,7 +936,7 @@ export default function EditorClient() {
                     </div>
                   </div>
                 ) : (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Gagal menghasilkan link digital Google Drive.</p>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>Gagal menghasilkan link digital Google Drive.</p>
                 )}
 
                 {/* WhatsApp Share Section */}
@@ -1031,7 +1012,7 @@ export default function EditorClient() {
 
                 <div style={{
                   fontSize: '12px',
-                  color: 'var(--text-muted)',
+                  color: 'rgba(255, 255, 255, 0.6)',
                   marginTop: '15px',
                   background: 'rgba(255,255,255,0.03)',
                   padding: '8px 12px',
@@ -1058,10 +1039,10 @@ export default function EditorClient() {
 
       {showDriveModal && googleDriveUrl && (
 
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowDriveModal(false); }}>
-          <div className="modal-box" style={{ maxWidth: '420px', width: '90%', textAlign: 'center', padding: '30px' }}>
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) setShowDriveModal(false); }}>
+          <div className="bg-[#1a1a24] border border-white/10 rounded-2xl shadow-2xl p-8" style={{ maxWidth: '420px', width: '90%', textAlign: 'center' }}>
             <h2 style={{ marginBottom: '10px', color: 'var(--teal)' }}>☁️ Unggah Google Drive Sukses!</h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+            <p style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '20px' }}>
               Scan QR Code ini dengan HP Anda untuk mengunduh foto kualitas tinggi langsung dari Google Drive:
             </p>
             <div style={{
@@ -1102,6 +1083,16 @@ export default function EditorClient() {
       )}
 
       <Toast toasts={toasts} onRemove={removeToast} />
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .toggleOn .toggleThumb-class {
+          transform: translateX(18px);
+        }
+      `}</style>
+
 
     </div>
   );

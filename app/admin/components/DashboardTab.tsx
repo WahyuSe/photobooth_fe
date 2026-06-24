@@ -4,7 +4,6 @@ import StatusBadge from "./StatusBadge";
 
 export default function DashboardTab({
   sessions = [],
-  onNewSession,
   onRefresh,
   searchQuery,
   setSearchQuery,
@@ -57,31 +56,6 @@ export default function DashboardTab({
               }}
             />
           </div>
-          <button
-            onClick={onNewSession}
-            style={{
-              background: "linear-gradient(135deg,#bd00ff,#7b00cc)",
-              color: "#fff",
-              border: "none",
-              borderRadius: 10,
-              padding: "9px 18px",
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              boxShadow: "0 0 20px rgba(189,0,255,0.4)",
-            }}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: 18 }}
-            >
-              add
-            </span>
-            New Session
-          </button>
         </div>
       </div>
 

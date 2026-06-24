@@ -1,12 +1,9 @@
-.main {
+/* .main {
   min-height: 100vh;
   position: relative;
   overflow: hidden;
 }
 
-/* ===========================
-   Background Particles
-   =========================== */
 .bgParticles {
   position: fixed;
   inset: 0;
@@ -25,25 +22,64 @@
   animation-delay: calc(var(--i) * 0.5s);
 }
 
-.particle:nth-child(odd) { background: var(--purple-mid); }
-.particle:nth-child(3n) { background: var(--teal); width: 3px; height: 3px; }
+.particle:nth-child(odd) {
+  background: var(--purple-mid);
+}
+.particle:nth-child(3n) {
+  background: var(--teal);
+  width: 3px;
+  height: 3px;
+}
 
-.particle:nth-child(1)  { top: 10%; left: 15%; }
-.particle:nth-child(2)  { top: 25%; left: 80%; }
-.particle:nth-child(3)  { top: 60%; left: 5%; }
-.particle:nth-child(4)  { top: 80%; left: 70%; }
-.particle:nth-child(5)  { top: 40%; left: 50%; }
-.particle:nth-child(6)  { top: 15%; left: 45%; }
-.particle:nth-child(7)  { top: 70%; left: 30%; }
-.particle:nth-child(8)  { top: 50%; left: 90%; }
-.particle:nth-child(9)  { top: 90%; left: 20%; }
-.particle:nth-child(10) { top: 35%; left: 65%; }
-.particle:nth-child(11) { top: 5%;  left: 60%; }
-.particle:nth-child(12) { top: 85%; left: 85%; }
+.particle:nth-child(1) {
+  top: 10%;
+  left: 15%;
+}
+.particle:nth-child(2) {
+  top: 25%;
+  left: 80%;
+}
+.particle:nth-child(3) {
+  top: 60%;
+  left: 5%;
+}
+.particle:nth-child(4) {
+  top: 80%;
+  left: 70%;
+}
+.particle:nth-child(5) {
+  top: 40%;
+  left: 50%;
+}
+.particle:nth-child(6) {
+  top: 15%;
+  left: 45%;
+}
+.particle:nth-child(7) {
+  top: 70%;
+  left: 30%;
+}
+.particle:nth-child(8) {
+  top: 50%;
+  left: 90%;
+}
+.particle:nth-child(9) {
+  top: 90%;
+  left: 20%;
+}
+.particle:nth-child(10) {
+  top: 35%;
+  left: 65%;
+}
+.particle:nth-child(11) {
+  top: 5%;
+  left: 60%;
+}
+.particle:nth-child(12) {
+  top: 85%;
+  left: 85%;
+}
 
-/* ===========================
-   Hero Section
-   =========================== */
 .hero {
   position: relative;
   z-index: 1;
@@ -109,12 +145,11 @@
 }
 
 @media (max-width: 1024px) {
-  .heroCta { justify-content: center; }
+  .heroCta {
+    justify-content: center;
+  }
 }
 
-/* ===========================
-   Hero Visual
-   =========================== */
 .heroVisual {
   display: flex;
   flex-direction: column;
@@ -155,12 +190,31 @@
   border-color: var(--pink-hot);
   border-style: solid;
 }
-.viewfinderCorner:nth-child(1) { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
-.viewfinderCorner:nth-child(2) { top: 6px; right: 6px; border-width: 2px 2px 0 0; }
-.viewfinderCorner:nth-child(3) { bottom: 6px; left: 6px; border-width: 0 0 2px 2px; }
-.viewfinderCorner:nth-child(4) { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
+.viewfinderCorner:nth-child(1) {
+  top: 6px;
+  left: 6px;
+  border-width: 2px 0 0 2px;
+}
+.viewfinderCorner:nth-child(2) {
+  top: 6px;
+  right: 6px;
+  border-width: 2px 2px 0 0;
+}
+.viewfinderCorner:nth-child(3) {
+  bottom: 6px;
+  left: 6px;
+  border-width: 0 0 2px 2px;
+}
+.viewfinderCorner:nth-child(4) {
+  bottom: 6px;
+  right: 6px;
+  border-width: 0 2px 2px 0;
+}
 
-.cameraEmoji { font-size: 40px; animation: pulse 2s ease-in-out infinite; }
+.cameraEmoji {
+  font-size: 40px;
+  animation: pulse 2s ease-in-out infinite;
+}
 
 .cameraFlash {
   position: absolute;
@@ -193,9 +247,6 @@
   animation: slideDown 0.5s ease both;
 }
 
-/* ===========================
-   Section Title
-   =========================== */
 .sectionTitle {
   font-size: clamp(24px, 3vw, 36px);
   font-weight: 700;
@@ -204,9 +255,6 @@
   color: var(--text-primary);
 }
 
-/* ===========================
-   Features
-   =========================== */
 .features {
   position: relative;
   z-index: 1;
@@ -246,9 +294,6 @@
   line-height: 1.6;
 }
 
-/* ===========================
-   Steps
-   =========================== */
 .steps {
   position: relative;
   z-index: 1;
@@ -284,7 +329,9 @@
   box-shadow: var(--shadow-glow-sm);
 }
 
-.stepIcon { font-size: 32px; }
+.stepIcon {
+  font-size: 32px;
+}
 
 .step h3 {
   font-size: 16px;
@@ -297,15 +344,16 @@
   color: var(--text-secondary);
 }
 
-/* ===========================
-   CTA Section
-   =========================== */
 .ctaSection {
   position: relative;
   z-index: 1;
   padding: 100px 32px;
   text-align: center;
-  background: linear-gradient(135deg, rgba(200, 80, 192, 0.08) 0%, rgba(65, 88, 208, 0.08) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(200, 80, 192, 0.08) 0%,
+    rgba(65, 88, 208, 0.08) 100%
+  );
 }
 
 .ctaSection h2 {
@@ -320,9 +368,6 @@
   margin-bottom: 40px;
 }
 
-/* ===========================
-   Footer
-   =========================== */
 .footer {
   position: relative;
   z-index: 1;
@@ -331,4 +376,4 @@
   border-top: 1px solid var(--border-color);
   color: var(--text-muted);
   font-size: 13px;
-}
+} */

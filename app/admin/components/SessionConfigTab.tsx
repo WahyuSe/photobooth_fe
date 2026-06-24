@@ -1,6 +1,14 @@
 "use client";
+import { useState } from "react";
 
 export default function SessionConfigTab({ eventConfig, setEventConfig, onSave }: any) {
+  const [showPopup, setShowPopup] = useState(false);
+
+  const handleSave = async (isNew: boolean = false) => {
+    await onSave(isNew);
+    setShowPopup(true);
+    setTimeout(() => setShowPopup(false), 3000);
+  };
   const sliderField = (label: string, id: string, min: number, max: number, value: number, onChange: any) => (
     <div style={{ flex: 1 }}>
       <div
@@ -506,23 +514,76 @@ export default function SessionConfigTab({ eventConfig, setEventConfig, onSave }
         </div>
       </div>
 
-      <button
-        onClick={onSave}
-        style={{
-          alignSelf: "flex-start",
-          background: "linear-gradient(135deg,#bd00ff,#7b00cc)",
-          color: "#fff",
-          border: "none",
-          borderRadius: 10,
-          padding: "12px 28px",
-          fontWeight: 700,
-          fontSize: 15,
-          cursor: "pointer",
-          boxShadow: "0 0 24px rgba(189,0,255,0.4)",
-        }}
-      >
-        💾 Save Configuration
-      </button>
+      <div style={{ display: 'flex', gap: '16px' }}>
+        <button
+          onClick={() => handleSave(false)}
+          style={{
+            alignSelf: "flex-start",
+            background: "transparent",
+            color: "#e2e8f0",
+            border: "1px solid #1e2a3a",
+            borderRadius: 10,
+            padding: "12px 28px",
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: "pointer",
+          }}
+        >
+          💾 Update Config
+        </button>
+        <button
+          onClick={() => handleSave(true)}
+          style={{
+            alignSelf: "flex-start",
+            background: "linear-gradient(135deg,#bd00ff,#7b00cc)",
+            color: "#fff",
+            border: "none",
+            borderRadius: 10,
+            padding: "12px 28px",
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: "pointer",
+            boxShadow: "0 0 24px rgba(189,0,255,0.4)",
+          }}
+        >
+          ✨ Save as New Session (Reset Quota)
+        </button>
+      </div>
+
+      {/* Success Popup */}
+      {showPopup && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 30,
+            right: 30,
+            background: "linear-gradient(135deg,#00e0ff,#0077ff)",
+            color: "#fff",
+            padding: "16px 24px",
+            borderRadius: 12,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            boxShadow: "0 10px 30px rgba(0, 224, 255, 0.3)",
+            zIndex: 1000,
+            animation: "slideIn 0.3s ease-out forwards",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 24 }}>
+            check_circle
+          </span>
+          <div>
+            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Success</h4>
+            <p style={{ margin: "2px 0 0", fontSize: 13, opacity: 0.9 }}>Configuration saved successfully!</p>
+          </div>
+        </div>
+      )}
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

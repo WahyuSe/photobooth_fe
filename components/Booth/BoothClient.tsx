@@ -3,13 +3,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import Link from 'next/link';
-import styles from './BoothClient.module.css';
 import EmailModal from '@/components/UI/EmailModal';
 import Toast from '@/components/UI/Toast';
 import { useToast } from '@/hooks/useToast';
 import { Template } from '@/lib/templates';
-
-const COUNTDOWN_SECONDS = 3;
 
 export default function BoothClient() {
   const webcamRef = useRef<Webcam>(null);
@@ -74,7 +71,7 @@ export default function BoothClient() {
         setCountdown(count);
       }
     }, 1000);
-  }, [isCountingDown, isDone, capturePhoto]);
+  }, [isCountingDown, isDone, capturePhoto, photoCountdown]);
 
   const retakePhoto = (index: number) => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
@@ -187,19 +184,19 @@ export default function BoothClient() {
   }, [autoCapture, isCountingDown, isDone, cameraReady, startCountdown]);
 
   return (
-    <div className={styles.wrapper}>
+    <div className="flex flex-col min-h-screen relative bg-[#0a0a0f] print:hidden">
       {/* Flash overlay */}
-      {isFlashing && <div className={styles.flashOverlay} aria-hidden="true" />}
+      {isFlashing && <div className="fixed inset-0 bg-white z-[999] pointer-events-none animate-[shutter_0.5s_ease_forwards]" aria-hidden="true" />}
 
-      <div className={styles.main}>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_340px] flex-1 gap-0">
         {/* Camera Section */}
-        <div className={styles.cameraSection}>
-          <div className={styles.cameraWrapper}>
+        <div className="flex flex-col bg-black">
+          <div className="relative flex-1 bg-[radial-gradient(circle_at_center,rgba(236,178,255,0.1)_0%,#000_70%)] aspect-video overflow-hidden">
             {cameraError ? (
-              <div className={styles.cameraError}>
-                <span>📷</span>
-                <p>Kamera tidak dapat diakses</p>
-                <small>Pastikan Anda mengizinkan akses kamera di browser</small>
+              <div className="flex flex-col items-center justify-center gap-3 h-full min-h-[300px] text-[#9099ab]">
+                <span className="text-[64px]">📷</span>
+                <p className="text-lg font-semibold">Kamera tidak dapat diakses</p>
+                <small className="text-[13px] text-gray-500">Pastikan Anda mengizinkan akses kamera di browser</small>
               </div>
             ) : (
               !isDone && (
@@ -210,17 +207,17 @@ export default function BoothClient() {
                     screenshotFormat="image/jpeg"
                     screenshotQuality={1}
                     mirrored
-                    className={styles.webcam}
+                    className="w-full h-full object-cover block"
                     onUserMedia={() => setCameraReady(true)}
                     onUserMediaError={() => setCameraError(true)}
                     videoConstraints={{ width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' }}
                   />
                   {/* Viewfinder overlay */}
-                  <div className={styles.viewfinderOverlay}>
-                    <div className={styles.vfCorner} />
-                    <div className={styles.vfCorner} />
-                    <div className={styles.vfCorner} />
-                    <div className={styles.vfCorner} />
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute w-6 h-6 border-[#c850c0]/70 border-solid top-5 left-5 border-t-2 border-l-2 border-r-0 border-b-0" />
+                    <div className="absolute w-6 h-6 border-[#c850c0]/70 border-solid top-5 right-5 border-t-2 border-r-2 border-l-0 border-b-0" />
+                    <div className="absolute w-6 h-6 border-[#c850c0]/70 border-solid bottom-5 left-5 border-b-2 border-l-2 border-r-0 border-t-0" />
+                    <div className="absolute w-6 h-6 border-[#c850c0]/70 border-solid bottom-5 right-5 border-b-2 border-r-2 border-l-0 border-t-0" />
                   </div>
                 </>
               )
@@ -228,27 +225,29 @@ export default function BoothClient() {
 
             {/* Countdown */}
             {isCountingDown && countdown > 0 && (
-              <div className={styles.countdownOverlay}>
-                <span key={countdown} className={styles.countdownNum}>{countdown}</span>
+              <div className="absolute top-8 right-8 z-[100] flex items-center justify-center">
+                <span key={countdown} className="text-[80px] font-extrabold text-white leading-none shadow-countdown animate-[countdown-pop_1s_ease_forwards] drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                  {countdown}
+                </span>
               </div>
             )}
 
             {/* Done overlay */}
             {isDone && (
-              <div className={styles.doneOverlay}>
-                <span>✅</span>
-                <p>Semua foto sudah diambil!</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70 backdrop-blur-sm">
+                <span className="text-[64px]">✅</span>
+                <p className="text-[20px] font-semibold text-white">Semua foto sudah diambil!</p>
               </div>
             )}
           </div>
 
           {/* Camera Controls */}
-          <div className={styles.cameraControls}>
-            <div className={styles.captureRow} style={{ justifyContent: 'center' }}>
+          <div className="p-4 md:px-6 bg-white/5 backdrop-blur-[20px] border-t border-white/10 flex flex-col gap-3">
+            <div className="flex items-center justify-center gap-3 flex-wrap">
               {!autoCapture && !isDone && (
                 <button
                   id="btn-auto-capture"
-                  className="btn btn-primary"
+                  className="bg-gradient-to-r from-[#bd00ff] to-[#7b00cc] text-white hover:scale-105 shadow-[0_0_24px_rgba(189,0,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed font-bold"
                   style={{ padding: '16px 40px', fontSize: '20px', borderRadius: '40px' }}
                   onClick={() => setAutoCapture(true)}
                   disabled={!cameraReady}
@@ -261,8 +260,8 @@ export default function BoothClient() {
         </div>
 
         {/* Right Panel — Photo Strip */}
-        <div className={styles.rightPanel}>
-          <h2 className={styles.panelTitle}>Hasil Foto ({photos.length}/{maxPhotos})</h2>
+        <div className="border-l border-white/10 bg-white/5 backdrop-blur-[20px] flex flex-col p-5 gap-4 overflow-y-auto">
+          <h2 className="text-base font-semibold text-white">Hasil Foto ({photos.length}/{maxPhotos})</h2>
 
           {(() => {
             if (layout === 'grid2x3' || layout === 'grid2x4') {
@@ -277,37 +276,38 @@ export default function BoothClient() {
                 const src = photos[photoIndex];
 
                 if (src) {
+                  const isActive = activeMobileSlot === i;
                   slotElements.push(
                     <div 
                       key={i} 
-                      className={`${styles.photoSlot} ${activeMobileSlot === i ? styles.activeSlot : ''}`} 
+                      className={`relative rounded-md overflow-hidden border border-white/20 aspect-[4/3] animate-[slideDown_0.4s_ease_both] group ${isActive ? 'active-slot' : ''}`} 
                       style={{ animationDelay: `${i * 0.05}s` }}
-                      onClick={() => setActiveMobileSlot(activeMobileSlot === i ? null : i)}
+                      onClick={() => setActiveMobileSlot(isActive ? null : i)}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={src} alt={`Foto ${photoIndex + 1}`} className={styles.photo} />
+                      <img src={src} alt={`Foto ${photoIndex + 1}`} className="w-full h-full object-cover block" />
                       {col === 0 && (
-                        <div className={styles.photoOverlay} style={{ flexDirection: 'column', gap: '8px' }}>
+                        <div className={`absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto ${isActive ? '!opacity-100 !bg-black/50 !pointer-events-auto' : ''}`}>
                           <button
-                            className={`btn btn-sm btn-secondary`}
+                            className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors"
                             onClick={(e) => { e.stopPropagation(); setPreviewPhoto(src); }}
                           >
                             🔍 Detail
                           </button>
                           <button
-                            className={`btn btn-sm btn-danger`}
+                            className="bg-red-500/80 hover:bg-red-500 text-white backdrop-blur-md px-3 py-1.5 rounded-md text-sm font-semibold transition-colors"
                             onClick={(e) => { e.stopPropagation(); retakePhoto(photoIndex); }}
                           >
                             🔁 Retake
                           </button>
                         </div>
                       )}
-                      <span className={styles.photoNum}>{photoIndex + 1}</span>
+                      <span className="absolute top-1.5 left-1.5 w-5 h-5 bg-black/60 rounded-full text-[11px] font-bold text-white flex items-center justify-center">{photoIndex + 1}</span>
                     </div>
                   );
                 } else {
                   slotElements.push(
-                    <div key={`empty-${i}`} className={`${styles.photoSlot} ${styles.emptySlot}`}>
+                    <div key={`empty-${i}`} className="relative rounded-md border border-dashed border-white/20 aspect-[4/3] bg-white/5 flex items-center justify-center text-[#9099ab] text-lg font-light">
                       <span>{photoIndex + 1}</span>
                     </div>
                   );
@@ -315,7 +315,7 @@ export default function BoothClient() {
               }
 
               return (
-                <div className={styles.photoGrid} id="photo-result">
+                <div className="grid grid-cols-2 gap-2" id="photo-result">
                   {slotElements}
                 </div>
               );
@@ -323,35 +323,38 @@ export default function BoothClient() {
 
             // Fallback for linear / strip
             return (
-              <div className={(layout === 'strip' || layout === 'strip3') ? styles.photoStrip : styles.photoGrid} id="photo-result">
-                {photos.map((src, i) => (
-                  <div 
-                    key={i} 
-                    className={`${styles.photoSlot} ${activeMobileSlot === i ? styles.activeSlot : ''}`} 
-                    style={{ animationDelay: `${i * 0.1}s` }}
-                    onClick={() => setActiveMobileSlot(activeMobileSlot === i ? null : i)}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} alt={`Foto ${i + 1}`} className={styles.photo} />
-                    <div className={styles.photoOverlay} style={{ flexDirection: 'column', gap: '8px' }}>
-                      <button
-                        className={`btn btn-sm btn-secondary`}
-                        onClick={(e) => { e.stopPropagation(); setPreviewPhoto(src); }}
-                      >
-                        🔍 Detail
-                      </button>
-                      <button
-                        className={`btn btn-sm btn-danger`}
-                        onClick={(e) => { e.stopPropagation(); retakePhoto(i); }}
-                      >
-                        🔁 Retake
-                      </button>
+              <div className={(layout === 'strip' || layout === 'strip3') ? "flex flex-col gap-2" : "grid grid-cols-2 gap-2"} id="photo-result">
+                {photos.map((src, i) => {
+                  const isActive = activeMobileSlot === i;
+                  return (
+                    <div 
+                      key={i} 
+                      className={`relative rounded-md overflow-hidden border border-white/20 aspect-[4/3] animate-[slideDown_0.4s_ease_both] group ${isActive ? 'active-slot' : ''}`} 
+                      style={{ animationDelay: `${i * 0.1}s` }}
+                      onClick={() => setActiveMobileSlot(isActive ? null : i)}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover block" />
+                      <div className={`absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto ${isActive ? '!opacity-100 !bg-black/50 !pointer-events-auto' : ''}`}>
+                        <button
+                          className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors"
+                          onClick={(e) => { e.stopPropagation(); setPreviewPhoto(src); }}
+                        >
+                          🔍 Detail
+                        </button>
+                        <button
+                          className="bg-red-500/80 hover:bg-red-500 text-white backdrop-blur-md px-3 py-1.5 rounded-md text-sm font-semibold transition-colors"
+                          onClick={(e) => { e.stopPropagation(); retakePhoto(i); }}
+                        >
+                          🔁 Retake
+                        </button>
+                      </div>
+                      <span className="absolute top-1.5 left-1.5 w-5 h-5 bg-black/60 rounded-full text-[11px] font-bold text-white flex items-center justify-center">{i + 1}</span>
                     </div>
-                    <span className={styles.photoNum}>{i + 1}</span>
-                  </div>
-                ))}
+                  );
+                })}
                 {Array.from({ length: maxPhotos - photos.length }).map((_, i) => (
-                  <div key={`empty-${i}`} className={`${styles.photoSlot} ${styles.emptySlot}`}>
+                  <div key={`empty-${i}`} className="relative rounded-md border border-dashed border-white/20 aspect-[4/3] bg-white/5 flex items-center justify-center text-[#9099ab] text-lg font-light">
                     <span>{photos.length + i + 1}</span>
                   </div>
                 ))}
@@ -360,10 +363,10 @@ export default function BoothClient() {
           })()}
 
           {/* Action Buttons */}
-          <div className={styles.actionBar}>
+          <div className="flex flex-col gap-2.5 mt-auto pt-4 border-t border-white/20">
             <button
               id="btn-go-editor"
-              className="btn btn-primary w-full"
+              className="bg-gradient-to-r from-[#bd00ff] to-[#7b00cc] text-white hover:opacity-90 w-full disabled:opacity-50 disabled:cursor-not-allowed font-bold rounded-lg transition-opacity"
               onClick={() => {
                 if (photos.length > 0) {
                   localStorage.setItem('pb_photos', JSON.stringify(photos));
@@ -392,17 +395,18 @@ export default function BoothClient() {
       <Toast toasts={toasts} onRemove={removeToast} />
 
       {/* Print area */}
-      <div className={styles.printArea} aria-hidden="true">
-        <div className={(layout === 'strip' || layout === 'strip3') ? styles.printStrip : styles.printGrid}>
+      <div className="hidden print:block print:p-[20mm]" aria-hidden="true">
+        <div className={(layout === 'strip' || layout === 'strip3') ? "print:flex print:flex-col print:gap-[8mm] print:items-center" : "print:grid print:grid-cols-2 print:gap-[6mm]"}>
           {photos.map((src, i) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={src} alt={`Foto ${i + 1}`} className={styles.printPhoto} />
+            <img key={i} src={src} alt={`Foto ${i + 1}`} className="w-full max-w-[80mm] rounded-[4mm] print:break-inside-avoid" />
           ))}
         </div>
-        <div className={styles.printFooter}>
+        <div className="text-center mt-[8mm] text-[11pt] text-[#888] border-t border-[#eee] pt-[4mm]">
           <p>📸 PhotoBooth App · {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </div>
       </div>
+      
       {/* Detail Preview Modal */}
       {previewPhoto && (
         <div 
@@ -412,7 +416,7 @@ export default function BoothClient() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={previewPhoto} style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', border: '2px solid white', borderRadius: '8px' }} alt="Detail Preview" />
           <button 
-            className="btn btn-secondary" 
+            className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md px-4 py-2 rounded-lg font-bold" 
             style={{ position: 'absolute', top: '20px', right: '20px' }}
             onClick={(e) => { e.stopPropagation(); setPreviewPhoto(null); }}
           >
@@ -420,6 +424,23 @@ export default function BoothClient() {
           </button>
         </div>
       )}
+
+      {/* Required Animations using inline style since tailwind config is not dynamically updateable easily */}
+      <style>{`
+        @keyframes shutter {
+          0% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes countdown-pop {
+          0% { transform: scale(0.5); opacity: 0; }
+          40% { transform: scale(1.2); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slideDown {
+          0% { transform: translateY(-20px); opacity: 0; }
+          100% { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -30,10 +30,6 @@ export default function AdminPage() {
     page3Duration: 20,
     photoCountdown: 5,
   });
-  const [showSessionModal, setShowSessionModal] = useState(false);
-  const [newSessionUser, setNewSessionUser] = useState("Tamu");
-  const [newSessionName, setNewSessionName] = useState("");
-  const [newSessionDuration, setNewSessionDuration] = useState(10);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -115,29 +111,12 @@ export default function AdminPage() {
     } catch {}
   };
 
-  const createSession = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await fetch(`${API_URL}/api/sessions/create-pending`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userName: newSessionUser,
-          sessionName: newSessionName,
-          durationMinutes: Number(newSessionDuration),
-        }),
-      });
-      setShowSessionModal(false);
-      fetchSessions();
-    } catch {}
-  };
-
-  const saveEventConfig = async () => {
+  const saveEventConfig = async (isNew = false) => {
     try {
       await fetch(`${API_URL}/api/admin/event/config`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(eventConfig),
+        body: JSON.stringify({ ...eventConfig, isNew }),
       });
     } catch {}
   };
@@ -264,7 +243,6 @@ export default function AdminPage() {
         {activeTab === "sessions" && (
           <DashboardTab
             sessions={sessions}
-            onNewSession={() => setShowSessionModal(true)}
             onRefresh={fetchSessions}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -283,142 +261,7 @@ export default function AdminPage() {
         {activeTab === "activity" && <ActivityTab />}
       </main>
 
-      {/* New Session Modal */}
-      {showSessionModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.7)",
-            zIndex: 200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowSessionModal(false);
-          }}
-        >
-          <div
-            style={{
-              background: "#131820",
-              border: "1px solid #1e2a3a",
-              borderRadius: 16,
-              padding: 28,
-              width: 420,
-              boxShadow: "0 0 40px rgba(189,0,255,0.2)",
-            }}
-          >
-            <h2
-              style={{
-                color: "#bd00ff",
-                fontWeight: 800,
-                fontSize: 18,
-                margin: "0 0 20px",
-              }}
-            >
-              Mulai Sesi Baru
-            </h2>
-            <form
-              onSubmit={createSession}
-              style={{ display: "flex", flexDirection: "column", gap: 14 }}
-            >
-              {[
-                {
-                  label: "Nama User",
-                  val: newSessionUser,
-                  set: setNewSessionUser,
-                  type: "text",
-                  req: true,
-                },
-                {
-                  label: "Nama Event/Sesi",
-                  val: newSessionName,
-                  set: setNewSessionName,
-                  type: "text",
-                  req: false,
-                },
-                {
-                  label: "Durasi (Menit)",
-                  val: newSessionDuration,
-                  set: (v: string) => setNewSessionDuration(parseInt(v)),
-                  type: "number",
-                  req: true,
-                },
-              ].map((f) => (
-                <div key={f.label}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: 10,
-                      letterSpacing: 1,
-                      color: "#556677",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      marginBottom: 6,
-                    }}
-                  >
-                    {f.label}
-                  </label>
-                  <input
-                    required={f.req}
-                    type={f.type}
-                    value={f.val}
-                    onChange={(e) => f.set(e.target.value)}
-                    style={{
-                      width: "100%",
-                      boxSizing: "border-box",
-                      background: "#0d1117",
-                      border: "1px solid #1e2a3a",
-                      borderRadius: 8,
-                      padding: "10px 12px",
-                      color: "#e2e8f0",
-                      fontSize: 14,
-                      outline: "none",
-                    }}
-                  />
-                </div>
-              ))}
-              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => setShowSessionModal(false)}
-                  style={{
-                    flex: 1,
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid #1e2a3a",
-                    color: "#aabbcc",
-                    borderRadius: 8,
-                    padding: 10,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    fontSize: 14,
-                  }}
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    flex: 1,
-                    background: "linear-gradient(135deg,#bd00ff,#7b00cc)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: 10,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    fontSize: 14,
-                  }}
-                >
-                  Buat Sesi
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

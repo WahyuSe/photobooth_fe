@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Template } from '@/lib/templates';
 import TemplatePicker from '@/components/Editor/TemplatePicker';
-import styles from '../page.module.css'; // Reuse some basic styles or create custom
 
 export default function SelectFramePage() {
   const router = useRouter();
@@ -49,20 +48,20 @@ export default function SelectFramePage() {
 
   if (templates.length === 0) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
-        <span className="spinner" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0f]">
+        <span className="w-10 h-10 border-4 border-[#ecb2ff33] border-t-[#ecb2ff] rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-primary)', padding: '40px' }}>
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1 style={{ fontSize: '32px', marginBottom: '8px' }}>Pilih Bingkai Favoritmu! 🖼️</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Pilih template bingkai sebelum mulai mengambil foto.</p>
+    <div className="flex flex-col min-h-screen bg-[#0a0a0f] p-6 md:p-10 text-[#f1f0f5] font-sans">
+      <div className="text-center mb-10">
+        <h1 className="text-3xl md:text-[32px] font-extrabold mb-2">Pilih Bingkai Favoritmu! 🖼️</h1>
+        <p className="text-[#9099ab] text-base">Pilih template bingkai sebelum mulai mengambil foto.</p>
       </div>
 
-      <div style={{ maxWidth: '800px', margin: '0 auto', flex: 1, width: '100%' }}>
+      <div className="max-w-[800px] mx-auto flex-1 w-full">
         {selectedTemplate && (
           <TemplatePicker 
             templates={templates} 
@@ -72,8 +71,16 @@ export default function SelectFramePage() {
         )}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '40px' }}>
-        <button className="btn btn-primary btn-lg" onClick={handleNext} disabled={!selectedTemplate}>
+      <div className="text-center mt-10">
+        <button 
+          onClick={handleNext} 
+          disabled={!selectedTemplate}
+          className={`px-10 py-4 text-lg md:text-[20px] rounded-full font-bold transition-all duration-300 ${
+            selectedTemplate
+              ? "bg-gradient-to-r from-[#bd00ff] to-[#7b00cc] text-white hover:scale-105 shadow-[0_0_24px_rgba(189,0,255,0.4)] cursor-pointer"
+              : "bg-[#1c1c26] text-[#5b6270] cursor-not-allowed border border-white/5"
+          }`}
+        >
           Lanjut ke Kamera 📸
         </button>
       </div>

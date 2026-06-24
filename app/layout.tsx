@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import './tailwind.css';
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'PhotoBooth App — Capture Your Moments',

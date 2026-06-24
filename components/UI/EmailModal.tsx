@@ -24,8 +24,8 @@ export default function EmailModal({ onClose, onSend, isLoading }: Props) {
   };
 
   return (
-    <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-box">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-[#1a1a24] border border-white/10 rounded-2xl shadow-2xl p-8 max-w-[420px] w-[90%] text-left">
         <div className={styles.header}>
           <div className={styles.icon}>📧</div>
           <div>

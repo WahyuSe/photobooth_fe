@@ -7,11 +7,8 @@ import dynamic from 'next/dynamic';
 const BoothClient = dynamic(() => import('@/components/Booth/BoothClient'), {
   ssr: false,
   loading: () => (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      height: '100vh', background: '#0a0a14', color: '#a0a0c0', flexDirection: 'column', gap: 16,
-    }}>
-      <div style={{ fontSize: 48 }}>📸</div>
+    <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a14] text-[#a0a0c0] gap-4">
+      <div className="text-[48px]">📸</div>
       <p>Memuat PhotoBooth...</p>
     </div>
   ),
@@ -75,11 +72,8 @@ export default function BoothPage() {
   // Kita merender kerangka loading statis agar HTML server dan client COCOK 100%.
   if (!isMounted) {
     return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: '#0a0a14', color: '#a0a0c0', flexDirection: 'column', gap: 16,
-      }}>
-        <div style={{ fontSize: 48 }}>📸</div>
+      <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a14] text-[#a0a0c0] gap-4">
+        <div className="text-[48px]">📸</div>
         <p>Memverifikasi sesi...</p>
       </div>
     );
@@ -88,11 +82,8 @@ export default function BoothPage() {
   // Setelah mount, jika verifikasi belum selesai atau gagal
   if (!hasSession) {
     return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: '#0a0a14', color: '#a0a0c0', flexDirection: 'column', gap: 16,
-      }}>
-        <div style={{ fontSize: 48 }}>📸</div>
+      <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a14] text-[#a0a0c0] gap-4">
+        <div className="text-[48px]">📸</div>
         <p>Memverifikasi sesi...</p>
       </div>
     );

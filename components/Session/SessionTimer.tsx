@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from './SessionTimer.module.css';
 import { useToast } from '@/hooks/useToast';
 
 export default function SessionTimer() {
@@ -76,7 +75,7 @@ export default function SessionTimer() {
   const isWarning = timeLeft <= 60; // Merah jika sisa <= 1 menit
 
   return (
-    <div className={`${styles.timer} ${isWarning ? styles.warning : ''}`}>
+    <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full font-bold shadow-lg transition-colors duration-300 ${isWarning ? 'bg-red-500/20 text-red-500 border border-red-500/50 animate-pulse' : 'bg-white/10 text-white backdrop-blur-md border border-white/20'}`}>
       <span>⏳</span>
       <span>
         {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
