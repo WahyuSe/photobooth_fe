@@ -8,17 +8,92 @@ export default function TemplatesTab({
   onDelete,
   onAddTemplate,
   onAddCategory,
+  onEditCategory,
   onDeleteCategory,
 }: any) {
   const [filterLayout, setFilterLayout] = useState("All Layouts");
-  const filters = [
-    "All Layouts",
-    "Grid (2x2)",
-    "Strip (1x3)",
-    "Portrait (1x1)",
-    "Animated GIF",
-    "Boomerang",
-  ];
+  const [filterCategory, setFilterCategory] = useState("All Categories");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [creationMode, setCreationMode] = useState<"select" | "manual" | "upload">("select");
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryDescription, setCategoryDescription] = useState("");
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    layout: "grid2x2",
+    categoryId: "",
+    photoCount: 4,
+    thumbnail: "",
+    frameColor: "#FFFFFF",
+    backgroundColor: "#000000",
+    textColor: "#000000",
+    accentColor: "#FF5733",
+    fonts: "Inter",
+    hasLogo: true,
+    hasDate: true,
+    hasFrame: true,
+    frameWidth: 20,
+    aspectRatio: "1:3",
+    overlayImage: "",
+    slotsJson: ""
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    let finalValue: any = value;
+    if (type === "checkbox") {
+      finalValue = (e.target as HTMLInputElement).checked;
+    } else if (type === "number") {
+      finalValue = parseInt(value, 10) || 0;
+    }
+    setFormData((prev) => ({ ...prev, [name]: finalValue }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, [fieldName]: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onAddTemplate) {
+      onAddTemplate(formData);
+    }
+    setIsAddModalOpen(false);
+    setCreationMode("select");
+    // Reset form
+    setFormData({
+      name: "", description: "", layout: "grid2x2", categoryId: "", photoCount: 4, thumbnail: "",
+      frameColor: "#FFFFFF", backgroundColor: "#000000", textColor: "#000000", accentColor: "#FF5733",
+      fonts: "Inter", hasLogo: true, hasDate: true, hasFrame: true, frameWidth: 20, aspectRatio: "1:3",
+      overlayImage: "", slotsJson: ""
+    });
+  };
+
+  const handleCategorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingCategoryId) {
+      if (onEditCategory && categoryName.trim()) {
+        onEditCategory(editingCategoryId, { name: categoryName.trim(), description: categoryDescription.trim() });
+      }
+    } else {
+      if (onAddCategory && categoryName.trim()) {
+        onAddCategory({ name: categoryName.trim(), description: categoryDescription.trim() });
+      }
+    }
+    setIsAddCategoryModalOpen(false);
+    setCategoryName("");
+    setCategoryDescription("");
+    setEditingCategoryId(null);
+  };
 
   const DEMO_TEMPLATES =
     templates.length > 0
@@ -89,6 +164,13 @@ export default function TemplatesTab({
     "GRID 2×3": "#00e0ff",
     default: "#bd00ff",
   };
+
+  const displayTemplates = DEMO_TEMPLATES.filter((t: any) => {
+    if (filterCategory === "All Categories") return true;
+    // Cek nama kategori dari relasi atau cari dari list categories by id
+    const catName = t.Category?.name || categories.find((c: any) => c.id === t.categoryId)?.name;
+    return catName === filterCategory;
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -177,7 +259,7 @@ export default function TemplatesTab({
         }}
       >
         {[
-          { label: "TOTAL TEMPLATES", value: "24", icon: "grid_view" },
+          { label: "TOTAL TEMPLATES", value: templates.length || DEMO_TEMPLATES.length, icon: "grid_view" },
           {
             label: "MOST POPULAR",
             value: "Neon 2x2",
@@ -254,48 +336,134 @@ export default function TemplatesTab({
           flexWrap: "wrap",
         }}
       >
-        {filters.map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilterLayout(f)}
-            style={{
-              padding: "7px 16px",
-              borderRadius: 99,
-              border: "1px solid",
-              borderColor: filterLayout === f ? "#00e0ff" : "#1e2a3a",
-              background:
-                filterLayout === f ? "rgba(0,224,255,0.15)" : "transparent",
-              color: filterLayout === f ? "#00e0ff" : "#778899",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            {f}
-          </button>
-        ))}
-        <div style={{ flex: 1 }} />
         <button
-          onClick={onAddTemplate}
+          onClick={() => setFilterCategory("All Categories")}
           style={{
-            background: "linear-gradient(135deg,#bd00ff,#7b00cc)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 10,
-            padding: "9px 18px",
-            fontWeight: 700,
+            padding: "7px 16px",
+            borderRadius: 99,
+            border: "1px solid",
+            borderColor: filterCategory === "All Categories" ? "#00e0ff" : "#1e2a3a",
+            background: filterCategory === "All Categories" ? "rgba(0,224,255,0.15)" : "transparent",
+            color: filterCategory === "All Categories" ? "#00e0ff" : "#778899",
             fontSize: 13,
+            fontWeight: 600,
             cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
           }}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
-            add
-          </span>
-          Add Template
+          All Categories
         </button>
+        {categories.map((c: any) => (
+          <div key={c.id} style={{ position: "relative", display: "inline-block" }}>
+            <button
+              onClick={() => setFilterCategory(c.name)}
+              style={{
+                padding: "7px 16px",
+                borderRadius: 99,
+                border: "1px solid",
+                borderColor: filterCategory === c.name ? "#00e0ff" : "#1e2a3a",
+                background: filterCategory === c.name ? "rgba(0,224,255,0.15)" : "transparent",
+                color: filterCategory === c.name ? "#00e0ff" : "#778899",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {c.name}
+            </button>
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingCategoryId(c.id);
+                setCategoryName(c.name);
+                setCategoryDescription(c.description || "");
+                setIsAddCategoryModalOpen(true);
+              }}
+              className="material-symbols-outlined"
+              title="Edit Category"
+              style={{
+                position: "absolute", top: -5, right: 14,
+                background: "#1e2a3a", color: "#00e0ff",
+                fontSize: 12, borderRadius: "50%",
+                cursor: "pointer", border: "1px solid #131820",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 18, height: 18, zIndex: 2
+              }}
+            >
+              edit
+            </span>
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm(`Hapus kategori "${c.name}"?`)) {
+                  onDeleteCategory && onDeleteCategory(c.id);
+                  if (filterCategory === c.name) setFilterCategory("All Categories");
+                }
+              }}
+              className="material-symbols-outlined"
+              title="Delete Category"
+              style={{
+                position: "absolute", top: -5, right: -5,
+                background: "#1e2a3a", color: "#f87171",
+                fontSize: 12, borderRadius: "50%",
+                cursor: "pointer", border: "1px solid #131820",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 18, height: 18, zIndex: 1
+              }}
+            >
+              close
+            </span>
+          </div>
+        ))}
+        <div style={{ flex: 1 }} />
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={() => {
+              setEditingCategoryId(null);
+              setCategoryName("");
+              setCategoryDescription("");
+              setIsAddCategoryModalOpen(true);
+            }}
+            style={{
+              background: "rgba(0,224,255,0.1)",
+              border: "1px solid rgba(0,224,255,0.3)",
+              color: "#00e0ff",
+              borderRadius: 10,
+              padding: "9px 18px",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+              add
+            </span>
+            Add Category
+          </button>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            style={{
+              background: "linear-gradient(135deg,#bd00ff,#7b00cc)",
+              color: "#fff",
+              border: "none",
+              borderRadius: 10,
+              padding: "9px 18px",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+              add
+            </span>
+            Add Template
+          </button>
+        </div>
       </div>
 
       {/* Template grid */}
@@ -306,7 +474,7 @@ export default function TemplatesTab({
           gap: 16,
         }}
       >
-        {DEMO_TEMPLATES.map((t: any) => {
+        {displayTemplates.map((t: any) => {
           const badge = t.badge || t.layout?.toUpperCase();
           const bc = badgeColors[badge] || badgeColors.default;
           return (
@@ -413,7 +581,7 @@ export default function TemplatesTab({
         })}
         {/* Create New tile */}
         <div
-          onClick={onAddTemplate}
+          onClick={() => setIsAddModalOpen(true)}
           style={{
             background: "#131820",
             border: "2px dashed #1e2a3a",
@@ -599,6 +767,224 @@ export default function TemplatesTab({
           </table>
         </div>
       </div>
+
+      {/* Add Template Modal */}
+      {isAddModalOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 1000, padding: 20
+        }}>
+          <div style={{
+            background: "#131820", border: "1px solid #1e2a3a", borderRadius: 16,
+            width: "100%", maxWidth: 600, maxHeight: "90vh", overflowY: "auto", padding: 24
+          }}>
+            {creationMode === "select" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "center", padding: "20px 10px" }}>
+                <h3 style={{ color: "#e2e8f0", margin: 0, fontSize: 22 }}>How to create template?</h3>
+                <p style={{ color: "#778899", margin: "-10px 0 10px", fontSize: 14 }}>Choose whether you want to upload a ready-made template or design manually.</p>
+                
+                <div style={{ display: "flex", gap: 16, width: "100%" }}>
+                  <div onClick={() => setCreationMode("upload")} style={{ flex: 1, background: "#1a222c", border: "2px solid #1e2a3a", borderRadius: 16, padding: "30px 20px", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", gap: 12, transition: "0.2s" }} onMouseEnter={(e) => e.currentTarget.style.borderColor = "#00e0ff"} onMouseLeave={(e) => e.currentTarget.style.borderColor = "#1e2a3a"}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 48, color: "#00e0ff" }}>upload_file</span>
+                    <span style={{ color: "#e2e8f0", fontWeight: 700, fontSize: 16 }}>Upload Image</span>
+                    <span style={{ color: "#556677", fontSize: 12, textAlign: "center" }}>Directly upload your finished template photo.</span>
+                  </div>
+                  
+                  <div onClick={() => setCreationMode("manual")} style={{ flex: 1, background: "#1a222c", border: "2px solid #1e2a3a", borderRadius: 16, padding: "30px 20px", display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", gap: 12, transition: "0.2s" }} onMouseEnter={(e) => e.currentTarget.style.borderColor = "#bd00ff"} onMouseLeave={(e) => e.currentTarget.style.borderColor = "#1e2a3a"}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 48, color: "#bd00ff" }}>design_services</span>
+                    <span style={{ color: "#e2e8f0", fontWeight: 700, fontSize: 16 }}>Create Manual</span>
+                    <span style={{ color: "#556677", fontSize: 12, textAlign: "center" }}>Configure colors, frames, slots manually.</span>
+                  </div>
+                </div>
+                
+                <button onClick={() => setIsAddModalOpen(false)} style={{ marginTop: 10, background: "transparent", color: "#aabbcc", border: "none", padding: "10px 20px", cursor: "pointer", fontWeight: 600 }}>
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {creationMode !== "select" && (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+                  <span className="material-symbols-outlined" onClick={() => setCreationMode("select")} style={{ color: "#aabbcc", cursor: "pointer" }}>arrow_back</span>
+                  <h3 style={{ color: "#e2e8f0", margin: 0, fontSize: 20 }}>
+                    {creationMode === "upload" ? "Upload Template" : "Add Manual Template"}
+                  </h3>
+                </div>
+
+                <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                    <div>
+                      <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Name *</label>
+                      <input required name="name" value={formData.name} onChange={handleInputChange} style={{ width: "100%", padding: "10px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }} />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Layout *</label>
+                      <select name="layout" value={formData.layout} onChange={handleInputChange} style={{ width: "100%", padding: "10px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }}>
+                        <option value="strip">Strip</option>
+                        <option value="grid2x2">Grid 2x2</option>
+                        <option value="single">Single</option>
+                        <option value="strip3">Strip 3</option>
+                        <option value="grid2x3">Grid 2x3</option>
+                        <option value="grid2x4">Grid 2x4</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Category</label>
+                    <select name="categoryId" value={formData.categoryId} onChange={handleInputChange} style={{ width: "100%", padding: "10px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }}>
+                      <option value="">No Category</option>
+                      {categories.map((c: any) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {creationMode === "upload" && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+                      <div>
+                        <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Upload Template File *</label>
+                        <input type="file" required accept="image/*" onChange={(e) => handleFileChange(e, "overlayImage")} style={{ width: "100%", padding: "7px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }} />
+                        {formData.overlayImage && <img src={formData.overlayImage} alt="preview" style={{ marginTop: 12, maxHeight: 150, borderRadius: 8, border: "1px solid #1e2a3a" }} />}
+                      </div>
+                    </div>
+                  )}
+
+                  {creationMode === "manual" && (
+                    <>
+                      <div>
+                        <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Description *</label>
+                        <textarea required name="description" value={formData.description} onChange={handleInputChange} style={{ width: "100%", padding: "10px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }} />
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+                        <div>
+                          <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Photo Count *</label>
+                          <input type="number" required name="photoCount" value={formData.photoCount} onChange={handleInputChange} style={{ width: "100%", padding: "10px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }} />
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+                        <div>
+                          <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Frame Color</label>
+                          <input type="color" name="frameColor" value={formData.frameColor} onChange={handleInputChange} style={{ width: "100%", height: 38, padding: 0, border: "none", borderRadius: 8 }} />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Bg Color</label>
+                          <input type="color" name="backgroundColor" value={formData.backgroundColor} onChange={handleInputChange} style={{ width: "100%", height: 38, padding: 0, border: "none", borderRadius: 8 }} />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Text Color</label>
+                          <input type="color" name="textColor" value={formData.textColor} onChange={handleInputChange} style={{ width: "100%", height: 38, padding: 0, border: "none", borderRadius: 8 }} />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Accent Color</label>
+                          <input type="color" name="accentColor" value={formData.accentColor} onChange={handleInputChange} style={{ width: "100%", height: 38, padding: 0, border: "none", borderRadius: 8 }} />
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <div>
+                          <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Fonts</label>
+                          <input name="fonts" value={formData.fonts} onChange={handleInputChange} style={{ width: "100%", padding: "10px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }} />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Aspect Ratio</label>
+                          <input name="aspectRatio" value={formData.aspectRatio} onChange={handleInputChange} style={{ width: "100%", padding: "10px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }} />
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <div>
+                          <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Thumbnail</label>
+                          <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, "thumbnail")} style={{ width: "100%", padding: "7px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }} />
+                          {formData.thumbnail && <img src={formData.thumbnail} alt="thumb" style={{ marginTop: 8, maxHeight: 60, borderRadius: 4 }} />}
+                        </div>
+                        <div>
+                          <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Overlay Image (Optional)</label>
+                          <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, "overlayImage")} style={{ width: "100%", padding: "7px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }} />
+                          {formData.overlayImage && <img src={formData.overlayImage} alt="overlay" style={{ marginTop: 8, maxHeight: 60, borderRadius: 4 }} />}
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", gap: 24, padding: "10px 0" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#e2e8f0", fontSize: 14 }}>
+                          <input type="checkbox" name="hasLogo" checked={formData.hasLogo} onChange={handleInputChange} />
+                          Has Logo
+                        </label>
+                        <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#e2e8f0", fontSize: 14 }}>
+                          <input type="checkbox" name="hasDate" checked={formData.hasDate} onChange={handleInputChange} />
+                          Has Date
+                        </label>
+                        <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#e2e8f0", fontSize: 14 }}>
+                          <input type="checkbox" name="hasFrame" checked={formData.hasFrame} onChange={handleInputChange} />
+                          Has Frame
+                        </label>
+                      </div>
+                    </>
+                  )}
+
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 10 }}>
+                    <button type="button" onClick={() => { setIsAddModalOpen(false); setCreationMode("select"); }} style={{ background: "transparent", color: "#e2e8f0", border: "1px solid #1e2a3a", padding: "10px 20px", borderRadius: 8, cursor: "pointer" }}>Cancel</button>
+                    <button type="submit" style={{ background: "linear-gradient(135deg,#bd00ff,#7b00cc)", color: "#fff", border: "none", padding: "10px 20px", borderRadius: 8, fontWeight: 700, cursor: "pointer" }}>Save Template</button>
+                  </div>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Add Category Modal */}
+      {isAddCategoryModalOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 1000, padding: 20
+        }}>
+          <div style={{
+            background: "#131820", border: "1px solid #1e2a3a", borderRadius: 16,
+            width: "100%", maxWidth: 400, padding: 24
+          }}>
+            <h3 style={{ color: "#e2e8f0", margin: "0 0 20px", fontSize: 20 }}>
+              {editingCategoryId ? "Edit Category" : "Add New Category"}
+            </h3>
+            <form onSubmit={handleCategorySubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Category Name *</label>
+                <input 
+                  required 
+                  autoFocus
+                  value={categoryName} 
+                  onChange={(e) => setCategoryName(e.target.value)} 
+                  style={{ width: "100%", padding: "10px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8 }} 
+                  placeholder="e.g. Wedding, Birthday, etc."
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", color: "#aabbcc", fontSize: 13, marginBottom: 6 }}>Description</label>
+                <textarea 
+                  value={categoryDescription} 
+                  onChange={(e) => setCategoryDescription(e.target.value)} 
+                  style={{ width: "100%", padding: "10px", background: "#0d1117", border: "1px solid #1e2a3a", color: "#fff", borderRadius: 8, minHeight: "80px" }} 
+                  placeholder="Optional description"
+                />
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 10 }}>
+                <button type="button" onClick={() => {
+                  setIsAddCategoryModalOpen(false);
+                  setEditingCategoryId(null);
+                }} style={{ background: "transparent", color: "#e2e8f0", border: "1px solid #1e2a3a", padding: "10px 20px", borderRadius: 8, cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ background: "rgba(0,224,255,0.15)", color: "#00e0ff", border: "1px solid rgba(0,224,255,0.3)", padding: "10px 20px", borderRadius: 8, fontWeight: 700, cursor: "pointer" }}>
+                  {editingCategoryId ? "Update Category" : "Save Category"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

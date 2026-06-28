@@ -121,6 +121,80 @@ export default function AdminPage() {
     } catch {}
   };
 
+  const handleAddTemplate = async (payload: any) => {
+    try {
+      const r = await fetch(`${API_URL}/api/templates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const d = await r.json();
+      if (d.success) {
+        fetchTemplates();
+      } else {
+        alert(d.message || "Failed to save template");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("System error occurred.");
+    }
+  };
+
+  const handleAddCategory = async (payload: { name: string; description?: string }) => {
+    try {
+      const r = await fetch(`${API_URL}/api/admin/categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const d = await r.json();
+      if (d.success) {
+        fetchCategories();
+      } else {
+        alert(d.message || "Failed to save category");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("System error occurred.");
+    }
+  };
+
+  const handleEditCategory = async (id: string, payload: { name: string; description?: string }) => {
+    try {
+      const r = await fetch(`${API_URL}/api/admin/categories/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const d = await r.json();
+      if (d.success) {
+        fetchCategories();
+      } else {
+        alert(d.message || "Failed to edit category");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("System error occurred.");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      const r = await fetch(`${API_URL}/api/admin/categories/${id}`, {
+        method: "DELETE",
+      });
+      const d = await r.json();
+      if (d.success) {
+        fetchCategories();
+      } else {
+        alert(d.message || "Failed to delete category");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("System error occurred.");
+    }
+  };
+
   // ── LOGIN SCREEN ──────────────────────────────────────────────────────────
   if (!token) {
     return (
@@ -249,7 +323,14 @@ export default function AdminPage() {
           />
         )}
         {activeTab === "templates" && (
-          <TemplatesTab templates={templates} categories={categories} />
+          <TemplatesTab 
+            templates={templates} 
+            categories={categories} 
+            onAddTemplate={handleAddTemplate}
+            onAddCategory={handleAddCategory}
+            onEditCategory={handleEditCategory}
+            onDeleteCategory={handleDeleteCategory}
+          />
         )}
         {activeTab === "sessions_list" && (
           <SessionConfigTab
