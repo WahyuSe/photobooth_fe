@@ -84,12 +84,13 @@ export default function AdminPage() {
       const d = await r.json();
       if (d.success && d.data) {
         const c = d.data;
-        c.startDate = c.startDate
-          ? new Date(c.startDate).toISOString().slice(0, 16)
-          : "";
-        c.endDate = c.endDate
-          ? new Date(c.endDate).toISOString().slice(0, 16)
-          : "";
+        const toLocalDatetimeString = (dateStr: string) => {
+          const d = new Date(dateStr);
+          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+          return d.toISOString().slice(0, 16);
+        };
+        c.startDate = c.startDate ? toLocalDatetimeString(c.startDate) : "";
+        c.endDate = c.endDate ? toLocalDatetimeString(c.endDate) : "";
         setEventConfig(c);
       }
     } catch {}
@@ -113,10 +114,17 @@ export default function AdminPage() {
 
   const saveEventConfig = async (isNew = false) => {
     try {
+      const payload = { ...eventConfig, isNew };
+      if (payload.startDate) {
+        payload.startDate = new Date(payload.startDate).toISOString();
+      }
+      if (payload.endDate) {
+        payload.endDate = new Date(payload.endDate).toISOString();
+      }
       await fetch(`${API_URL}/api/admin/event/config`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...eventConfig, isNew }),
+        body: JSON.stringify(payload),
       });
     } catch {}
   };
