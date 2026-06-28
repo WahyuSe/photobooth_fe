@@ -124,7 +124,7 @@ export default function CanvasEditor({
   // Load overlay
   const overlayImg = useCanvasImage(
     template.overlayImage
-      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}${template.overlayImage}`
+      ? `${process.env.NEXT_PUBLIC_API_URL}${template.overlayImage}`
       : undefined,
   );
 

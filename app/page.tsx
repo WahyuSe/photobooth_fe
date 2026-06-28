@@ -15,8 +15,9 @@ export default function HomePage() {
     setErrorMsg("");
 
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/sessions/start`,
+        `${apiUrl}/api/sessions/start`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

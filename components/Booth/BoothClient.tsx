@@ -32,7 +32,7 @@ export default function BoothClient() {
     if (l) setLayout(l);
 
     // Get event config for photoCountdown
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/event/config`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/event/config`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data) {

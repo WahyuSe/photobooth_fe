@@ -195,7 +195,7 @@ export default function AdminLayoutEditor({
 
   // Load overlay image
   const overlayUrl = overlayImage
-    ? (overlayImage.startsWith('http') ? overlayImage : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${overlayImage}`)
+    ? (overlayImage.startsWith('http') ? overlayImage : `${process.env.NEXT_PUBLIC_API_URL}${overlayImage}`)
     : undefined;
   const overlayImg = useCanvasImage(overlayUrl);
 

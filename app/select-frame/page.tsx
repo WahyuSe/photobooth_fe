@@ -19,7 +19,7 @@ export default function SelectFramePage() {
     }
 
     // Fetch templates
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/templates`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/templates`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data.length > 0) {

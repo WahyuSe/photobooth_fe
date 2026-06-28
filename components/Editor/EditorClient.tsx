@@ -229,7 +229,7 @@ export default function EditorClient() {
     const tplId = localStorage.getItem('pb_template_id');
 
     // Fetch templates
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/templates`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/templates`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data.length > 0) {
@@ -258,7 +258,7 @@ export default function EditorClient() {
       .catch(err => console.error('Failed to load templates:', err));
 
     // Fetch categories
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/categories`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -268,7 +268,7 @@ export default function EditorClient() {
       .catch(err => console.error('Failed to load categories:', err));
 
     // Fetch settings to check if WhatsApp share is enabled
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/admin/settings`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/settings`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data) {
@@ -323,7 +323,7 @@ export default function EditorClient() {
     const sessionId = localStorage.getItem('pb_session_id');
     if (sessionId) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/sessions/complete`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sessions/complete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId })
@@ -408,7 +408,7 @@ export default function EditorClient() {
     setIsUploadingToDrive(true);
     try {
       const sessionCode = localStorage.getItem('pb_session_id') || 'guest';
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/upload/google-drive`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload/google-drive`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageBase64: finalImage, sessionName: sessionCode }),
@@ -468,7 +468,7 @@ export default function EditorClient() {
     try {
       // 1. Upload to Google Drive in background
       const sessionCode = localStorage.getItem('pb_session_id') || 'guest';
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/upload/google-drive`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload/google-drive`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageBase64: finalImage, sessionName: sessionCode }),

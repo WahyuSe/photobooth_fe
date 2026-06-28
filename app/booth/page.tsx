@@ -44,7 +44,7 @@ export default function BoothPage() {
     // 2. Verifikasi langsung ke database backend apakah sesi benar-benar AKTIF
     const verifyWithBackend = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/sessions/${id}/heartbeat`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sessions/${id}/heartbeat`, {
           method: 'POST',
         });
         const data = await res.json();
